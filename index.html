@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUKSA Intel v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080c12;
+  --bg2:#0d1117;
+  --surface:#111820;
+  --surface2:#161d27;
+  --surface3:#1c2530;
+  --border:rgba(255,255,255,.06);
+  --border2:rgba(255,255,255,.1);
+  --text:#f0f4f8;
+  --muted:#6b7a8d;
+  --faint:#3d4a57;
+  --accent:#4f9cf9;
+  --accent2:#3d8bef;
+  --green:#22c55e;
+  --green-bg:rgba(34,197,94,.08);
+  --green-bd:rgba(34,197,94,.2);
+  --amber:#f59e0b;
+  --amber-bg:rgba(245,158,11,.08);
+  --red:#ef4444;
+  --red-bg:rgba(239,68,68,.08);
+  --purple:#a78bfa;
+  --purple-bg:rgba(167,139,250,.08);
+  --gold:#eab308;
+  --sidebar-w:260px;
+  --header-h:52px;
+  --r:10px;
+  --font-display:'Instrument Serif',serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:13px;}
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ── LAYOUT ── */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sb-logo{
+  padding:16px 18px 12px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.sb-logo-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.sb-logo-text{font-family:var(--font-display);font-size:16px;letter-spacing:.01em;color:var(--text)}
+.sb-logo-version{font-size:9px;color:var(--muted);background:var(--surface3);padding:1px 5px;border-radius:3px;margin-left:auto;font-family:var(--font-mono)}
+
+.sb-section{padding:8px 10px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--faint)}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 8px}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:7px;
+  cursor:pointer;margin-bottom:1px;
+  color:var(--muted);font-size:12px;font-weight:500;
+  transition:all .12s;position:relative;
+}
+.nav-item:hover{background:var(--surface);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--text)}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:18px;background:var(--accent);border-radius:0 2px 2px 0;
+}
+.nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--font-mono);background:var(--surface3);padding:1px 6px;border-radius:10px;color:var(--muted)}
+.nav-badge.green{background:var(--green-bg);color:var(--green)}
+.nav-badge.amber{background:var(--amber-bg);color:var(--amber)}
+
+.sb-stats{padding:12px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sb-stat{background:var(--surface);border-radius:7px;padding:8px 10px}
+.sb-stat-val{font-family:var(--font-mono);font-size:16px;font-weight:500;color:var(--text);line-height:1}
+.sb-stat-lbl{font-size:9px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── MAIN AREA ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOP BAR ── */
+#topbar{
+  height:var(--header-h);flex-shrink:0;
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+.topbar-title{font-family:var(--font-display);font-size:18px;color:var(--text);flex:1}
+.topbar-subtitle{font-size:11px;color:var(--muted);margin-top:1px}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+
+/* ── CONTENT ── */
+#content{flex:1;overflow:hidden;position:relative}
+.pane{position:absolute;inset:0;overflow-y:auto;padding:24px;display:none}
+.pane.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:7px;font-size:12px;font-weight:500;
+  cursor:pointer;font-family:var(--font-body);border:1px solid var(--border2);
+  background:var(--surface2);color:var(--muted);transition:all .12s;
+}
+.btn:hover{background:var(--surface3);color:var(--text)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn.green{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.btn.green:hover{background:rgba(34,197,94,.15)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--surface);color:var(--text)}
+.btn.sm{padding:5px 10px;font-size:11px}
+.btn.icon{padding:7px;width:32px;height:32px;justify-content:center}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;border:1px solid transparent}
+.badge.green{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+.badge.amber{background:var(--amber-bg);color:var(--amber);border-color:rgba(245,158,11,.2)}
+.badge.red{background:var(--red-bg);color:var(--red);border-color:rgba(239,68,68,.2)}
+.badge.purple{background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,.2)}
+.badge.blue{background:rgba(79,156,249,.08);color:var(--accent);border-color:rgba(79,156,249,.2)}
+.badge.gold{background:rgba(234,179,8,.08);color:var(--gold);border-color:rgba(234,179,8,.2)}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;flex:1;max-width:400px}
+.search-input{
+  width:100%;padding:7px 12px 7px 34px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:var(--font-body);font-size:12px;outline:none;
+  transition:border .12s;
+}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--faint)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px;pointer-events:none}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filter-select{
+  padding:5px 10px;border-radius:6px;font-size:11px;font-weight:500;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--muted);font-family:var(--font-body);outline:none;cursor:pointer;
+  transition:all .12s;
+}
+.filter-select:hover{border-color:var(--border2);color:var(--text)}
+.filter-chip{
+  padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.filter-chip:hover,.filter-chip.on{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+
+/* ── COMPANY LIST ── */
+.co-table{width:100%;border-collapse:collapse}
+.co-table th{
+  padding:8px 12px;text-align:left;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.07em;color:var(--faint);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.co-table th.sort{cursor:pointer}
+.co-table th.sort:hover{color:var(--muted)}
+.co-row{
+  border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background .08s;
+}
+.co-row:hover{background:rgba(255,255,255,.02)}
+.co-row td{padding:10px 12px;vertical-align:middle}
+.co-name-cell{display:flex;align-items:center;gap:10px}
+.co-avatar{
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.co-name{font-size:12px;font-weight:500;color:var(--text)}
+.co-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.co-rev{font-family:var(--font-mono);font-size:11px;color:var(--accent)}
+.co-fit{font-family:var(--font-mono);font-size:11px;color:var(--amber)}
+.co-tag-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ── LAYER DOTS ── */
+.layer-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px}
+
+/* ── STAT GRID ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent-color,var(--accent));
+}
+.stat-card-val{font-family:var(--font-mono);font-size:24px;font-weight:500;color:var(--text);line-height:1}
+.stat-card-lbl{font-size:10px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.07em}
+.stat-card-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── PROFILE ── */
+.profile-wrap{display:grid;grid-template-columns:1fr 360px;gap:20px;height:100%}
+.profile-main{overflow-y:auto;padding-right:4px}
+.profile-side{overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.profile-header{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px;margin-bottom:16px;
+  display:flex;align-items:flex-start;gap:16px;
+}
+.profile-avatar{
+  width:56px;height:56px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.profile-name{font-family:var(--font-display);font-size:24px;line-height:1.1;color:var(--text)}
+.profile-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.profile-tabs{display:flex;gap:2px;margin-bottom:16px;background:var(--surface);border-radius:8px;padding:3px;border:1px solid var(--border)}
+.profile-tab{
+  padding:6px 14px;border-radius:6px;font-size:11px;font-weight:500;
+  cursor:pointer;color:var(--muted);transition:all .12s;
+}
+.profile-tab.active{background:var(--surface3);color:var(--text)}
+.profile-tab-pane{display:none}
+.profile-tab-pane.active{display:block}
+
+/* ── MTS GRID ── */
+.mts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.mts-cell{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:10px;text-align:center;
+}
+.mts-cell.yes{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2)}
+.mts-cell.partial{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
+.mts-cell.no{background:rgba(255,255,255,.03);border-color:var(--border)}
+.mts-cell-key{font-size:18px;font-weight:700;font-family:var(--font-mono);margin-bottom:4px}
+.mts-cell.yes .mts-cell-key{color:var(--green)}
+.mts-cell.partial .mts-cell-key{color:var(--amber)}
+.mts-cell.no .mts-cell-key{color:var(--faint)}
+.mts-cell-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.mts-cell-val{font-size:10px;font-weight:600;margin-top:3px}
+.mts-cell.yes .mts-cell-val{color:var(--green)}
+.mts-cell.partial .mts-cell-val{color:var(--amber)}
+.mts-cell.no .mts-cell-val{color:var(--faint)}
+
+/* ── METRICS ROW ── */
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.metric-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:14px;
+}
+.metric-val{font-family:var(--font-mono);font-size:18px;font-weight:500;color:var(--accent)}
+.metric-lbl{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+.metric-chg{font-size:10px;color:var(--green);margin-top:2px}
+
+/* ── REVIEW STACK ── */
+.stack-wrap{display:grid;grid-template-columns:1fr 400px;gap:0;height:100%;overflow:hidden}
+.stack-left{display:flex;flex-direction:column;border-right:1px solid var(--border)}
+.stack-filters{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.stack-stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.stack-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:center}
+.stack-right{overflow-y:auto;background:var(--bg2)}
+
+.swipe-card{
+  width:480px;max-width:90%;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+  position:absolute;
+  transition:transform .18s ease, opacity .18s ease;
+  cursor:grab;
+}
+.swipe-card.ghost{
+  transform:scale(.96) translateY(10px);
+  z-index:0;background:var(--surface2);
+  border-color:var(--border);
+  box-shadow:none;
+}
+.swipe-card.front{z-index:1}
+
+.swipe-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 20px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--surface);cursor:pointer;font-family:var(--font-body);
+  transition:all .12s;min-width:80px;
+}
+.swipe-btn:hover{transform:translateY(-2px)}
+.swipe-btn .icon{font-size:20px}
+.swipe-btn .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.swipe-btn.reject{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+.swipe-btn.reject:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.5)}
+.swipe-btn.watch{border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.05)}
+.swipe-btn.watch:hover{background:rgba(167,139,250,.12)}
+.swipe-btn.shortlist{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)}
+.swipe-btn.shortlist:hover{background:rgba(245,158,11,.12)}
+.swipe-btn.profile{border-color:rgba(79,156,249,.3);background:rgba(79,156,249,.05)}
+.swipe-btn.profile:hover{background:rgba(79,156,249,.12)}
+
+/* ── AI CHAT ── */
+.chat-wrap{display:flex;flex-direction:column;height:100%}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.chat-msg{max-width:80%}
+.chat-msg.user{align-self:flex-end}
+.chat-msg.ai{align-self:flex-start}
+.chat-bubble{
+  padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.7;
+}
+.chat-msg.user .chat-bubble{background:var(--accent);color:#fff;border-radius:12px 12px 3px 12px}
+.chat-msg.ai .chat-bubble{background:var(--surface);border:1px solid var(--border);border-radius:3px 12px 12px 12px;color:var(--text)}
+.chat-input-wrap{
+  padding:16px 20px;border-top:1px solid var(--border);
+  display:flex;gap:10px;align-items:flex-end;background:var(--bg2);
+}
+.chat-input{
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:13px;
+  outline:none;resize:none;min-height:42px;max-height:120px;
+  transition:border .12s;
+}
+.chat-input:focus{border-color:var(--accent)}
+.chat-suggestions{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 12px}
+.chat-suggestion{
+  padding:6px 12px;border-radius:20px;font-size:11px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.chat-suggestion:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── PIPELINE (KANBAN) ── */
+.pipeline-wrap{display:flex;gap:12px;height:100%;overflow-x:auto;padding-bottom:8px}
+.pipeline-col{
+  min-width:240px;max-width:280px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+}
+.pipeline-col-head{
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.pipeline-col-title{font-size:12px;font-weight:600;color:var(--text)}
+.pipeline-col-count{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:var(--surface3);padding:1px 6px;border-radius:10px}
+.pipeline-cards{flex:1;overflow-y:auto;padding:8px}
+.pipeline-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:12px;margin-bottom:6px;cursor:pointer;
+  transition:border-color .12s;
+}
+.pipeline-card:hover{border-color:var(--border2)}
+.pipeline-card-name{font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px}
+.pipeline-card-meta{font-size:10px;color:var(--muted)}
+
+/* ── ROLL-UP ── */
+.rollup-wrap{display:grid;grid-template-columns:320px 1fr;gap:20px;height:100%;overflow:hidden}
+.rollup-config{overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.rollup-results{overflow-y:auto}
+.combo-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;margin-bottom:12px;
+}
+.combo-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.combo-label{font-family:var(--font-display);font-size:16px;color:var(--text)}
+.combo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.combo-stat{background:var(--surface2);border-radius:6px;padding:8px;text-align:center}
+.combo-stat-val{font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--accent)}
+.combo-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.combo-co-row{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--surface2);border-radius:7px;margin-bottom:5px;
+  cursor:pointer;transition:background .1s;border:1px solid transparent;
+}
+.combo-co-row:hover{background:rgba(79,156,249,.05);border-color:rgba(79,156,249,.15)}
+
+/* ── SPINNERS & LOADING ── */
+.spin{
+  display:inline-block;width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--border2);border-top-color:var(--accent);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── IMPORT MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;padding:28px;width:520px;max-width:90vw;
+  max-height:80vh;overflow-y:auto;
+}
+.modal-title{font-family:var(--font-display);font-size:22px;margin-bottom:6px;color:var(--text)}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--surface3);border:1px solid var(--border2);
+  border-radius:9px;padding:10px 18px;font-size:12px;font-weight:500;
+  color:var(--text);z-index:2000;animation:toastIn .2s ease;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .2s ease both}
+
+/* ── TOOLTIP ── */
+[data-tip]{position:relative}
+[data-tip]:hover::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#1a2332;border:1px solid var(--border2);border-radius:5px;
+  padding:4px 8px;font-size:10px;color:var(--text);white-space:nowrap;z-index:100;pointer-events:none;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center;color:var(--muted);gap:10px}
+.empty-icon{font-size:36px;opacity:.4}
+.empty-title{font-size:14px;font-weight:500;color:var(--text)}
+.empty-sub{font-size:12px}
+
+/* ── SHORTLIST PANEL ── */
+.sl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.sl-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;cursor:pointer;transition:border-color .12s;
+}
+.sl-card:hover{border-color:var(--border2)}
+
+/* ── SECTION HEADER ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-family:var(--font-display);font-size:20px;color:var(--text)}
+.section-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ── INFO PANEL ── */
+.info-section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.info-section:last-child{border-bottom:none}
+.info-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.info-link{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 10px;
+  border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  transition:all .1s;text-decoration:none;
+}
+.info-link:hover{background:var(--surface3);color:var(--text)}
+
+/* ── DEAL MEMO ── */
+.memo-section{margin-bottom:20px}
+.memo-section h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.memo-content{font-size:13px;line-height:1.8;color:var(--muted)}
+
+/* ── LAYER COLORS ── */
+.layer-content{color:#f59e0b}
+.layer-delivery{color:#22c55e}
+.layer-tech{color:#4f9cf9}
+.layer-admin{color:#a78bfa}
+.layer-sourcing{color:#ef4444}
+
+/* ── RESPONSIVE SCROLL ── */
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── AI ANALYSIS BOX ── */
+.ai-box{
+  background:rgba(79,156,249,.04);border:1px solid rgba(79,156,249,.12);
+  border-radius:8px;padding:14px;font-size:12px;line-height:1.8;color:var(--muted);
+}
+.ai-box.loading{min-height:80px;display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* ── IMPORT DROP ZONE ── */
+.drop-zone{
+  border:2px dashed var(--border2);border-radius:12px;
+  padding:40px;text-align:center;cursor:pointer;
+  transition:all .15s;color:var(--muted);
+}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(79,156,249,.04);color:var(--text)}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">H</div>
+      <div>
+        <div class="sb-logo-text">HUKSA Intel</div>
+      </div>
+      <div class="sb-logo-version">v2</div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section">Intelligence</div>
+      <div class="nav-item active" data-pane="universe" onclick="showPane('universe')">
+        <div class="nav-icon">◫</div> Universe
+        <div class="nav-badge" id="nb-total">0</div>
+      </div>
+      <div class="nav-item" data-pane="pipeline" onclick="showPane('pipeline')">
+        <div class="nav-icon">⬡</div> Deal Pipeline
+      </div>
+      <div class="nav-item" data-pane="shortlisted" onclick="showPane('shortlisted')">
+        <div class="nav-icon">★</div> Shortlisted
+        <div class="nav-badge green" id="nb-sl">0</div>
+      </div>
+      <div class="nav-item" data-pane="review" onclick="showPane('review')">
+        <div class="nav-icon">⟳</div> Review Stack
+      </div>
+      <div class="sb-section" style="margin-top:8px">Analysis</div>
+      <div class="nav-item" data-pane="rollup" onclick="showPane('rollup')">
+        <div class="nav-icon">⊕</div> Roll-Up Builder
+      </div>
+      <div class="nav-item" data-pane="ai" onclick="showPane('ai')">
+        <div class="nav-icon">✦</div> AI Assistant
+      </div>
+      <div class="nav-item" data-pane="reports" onclick="showPane('reports')">
+        <div class="nav-icon">⊞</div> Reports
+      </div>
+      <div class="sb-section" style="margin-top:8px">Data</div>
+      <div class="nav-item" data-pane="huksa" onclick="showPane('huksa')">
+        <div class="nav-icon">◈</div> HUKSA Profile
+      </div>
+      <div class="nav-item" onclick="exportCSV()">
+        <div class="nav-icon">↓</div> Export CSV
+      </div>
+      <div class="nav-item" onclick="showImport()">
+        <div class="nav-icon">↑</div> Import Data
+      </div>
+    </div>
+    <div class="sb-stats">
+      <div class="sb-stat">
+        <div class="sb-stat-val" id="stat-total">0</div>
+        <div class="sb-stat-lbl">Companies</div>
+      </div>
+      <div class="sb-stat">
+        <div class="sb-stat-val" style="color:var(--amber)" id="stat-sl">0</div>
+        <div class="sb-stat-lbl">Shortlisted</div>
+      </div>
+      <div class="sb-stat">
+        <div class="sb-stat-val" style="color:var(--green)" id="stat-watch">0</div>
+        <div class="sb-stat-lbl">Watching</div>
+      </div>
+      <div class="sb-stat">
+        <div class="sb-stat-val" style="color:var(--muted)" id="stat-rej">0</div>
+        <div class="sb-stat-lbl">Passed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Universe</div>
+        <div class="topbar-subtitle" id="topbar-sub">India L&D · Managed Training Services</div>
+      </div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </div>
+    <div id="content">
+
+      <!-- UNIVERSE PANE -->
+      <div class="pane active" id="pane-universe">
+        <div class="stat-grid" id="universe-stats"></div>
+        <div class="filter-row">
+          <div class="search-wrap">
+            <span class="search-icon">⌕</span>
+            <input class="search-input" id="u-search" placeholder="Search companies, segment, city..." oninput="renderUniverse()">
+          </div>
+          <select class="filter-select" id="u-tier" onchange="renderUniverse()">
+            <option value="">All Tiers</option>
+            <option value="full">Full-stack</option>
+            <option value="partial">Partial</option>
+            <option value="specialist">Specialist</option>
+            <option value="niche">Niche</option>
+          </select>
+          <select class="filter-select" id="u-layer" onchange="renderUniverse()">
+            <option value="">All Layers</option>
+            <option value="content">Content</option>
+            <option value="delivery">Delivery</option>
+            <option value="tech">Tech</option>
+            <option value="admin">Admin</option>
+            <option value="sourcing">Sourcing</option>
+          </select>
+          <select class="filter-select" id="u-status" onchange="renderUniverse()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="shortlist">Shortlisted</option>
+            <option value="watchlist">Watching</option>
+            <option value="rejected">Passed</option>
+          </select>
+          <select class="filter-select" id="u-sort" onchange="renderUniverse()">
+            <option value="fit">Sort: Fit Score</option>
+            <option value="rev">Sort: Revenue</option>
+            <option value="name">Sort: Name</option>
+            <option value="acq">Sort: Acq Range</option>
+          </select>
+          <span id="u-count" style="font-size:11px;color:var(--muted);margin-left:auto"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="co-table" id="co-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Layer</th>
+                <th>Tier</th>
+                <th>Revenue</th>
+                <th>EBITDA</th>
+                <th>Fit</th>
+                <th>Acq Range</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="co-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PIPELINE PANE -->
+      <div class="pane" id="pane-pipeline">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Deal Pipeline</div>
+            <div class="section-sub">Track companies through your M&A process</div>
+          </div>
+        </div>
+        <div class="pipeline-wrap" id="pipeline-board"></div>
+      </div>
+
+      <!-- SHORTLISTED PANE -->
+      <div class="pane" id="pane-shortlisted">
+        <div class="section-header">
+          <div>
+            <div class="section-title">★ Shortlisted</div>
+            <div class="section-sub" id="sl-sub">0 companies shortlisted</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="search-wrap" style="max-width:220px">
+              <span class="search-icon">⌕</span>
+              <input class="search-input" id="sl-search" placeholder="Search..." oninput="renderShortlisted()">
+            </div>
+          </div>
+        </div>
+        <div class="stat-grid" id="sl-stats" style="margin-bottom:20px"></div>
+        <div class="sl-grid" id="sl-grid"></div>
+      </div>
+
+      <!-- REVIEW STACK PANE -->
+      <div class="pane" id="pane-review" style="padding:0;overflow:hidden">
+        <div class="stack-wrap">
+          <div class="stack-left">
+            <div class="stack-filters" id="stack-filters">
+              <span style="font-size:10px;color:var(--muted)">Layer:</span>
+              <div class="filter-chip on" data-layer="content" onclick="toggleStackLayer(this)" style="border-color:#f59e0b;color:#f59e0b">Content</div>
+              <div class="filter-chip on" data-layer="delivery" onclick="toggleStackLayer(this)" style="border-color:#22c55e;color:#22c55e">Delivery</div>
+              <div class="filter-chip on" data-layer="tech" onclick="toggleStackLayer(this)" style="border-color:#4f9cf9;color:#4f9cf9">Tech</div>
+              <div class="filter-chip on" data-layer="admin" onclick="toggleStackLayer(this)" style="border-color:#a78bfa;color:#a78bfa">Admin</div>
+              <div class="filter-chip on" data-layer="sourcing" onclick="toggleStackLayer(this)" style="border-color:#ef4444;color:#ef4444">Sourcing</div>
+              <div style="margin-left:auto;font-size:11px;color:var(--muted)" id="stack-count"></div>
+            </div>
+            <div class="stack-stage" id="stack-stage"></div>
+            <div class="stack-actions">
+              <button class="swipe-btn reject" onclick="stackAction('rejected')"><span class="icon">✕</span><span class="lbl">Pass</span></button>
+              <button class="swipe-btn" onclick="stackAction('skip')" style="border-color:var(--border2)"><span class="icon">→</span><span class="lbl">Skip</span></button>
+              <button class="swipe-btn watch" onclick="stackAction('watchlist')"><span class="icon">◎</span><span class="lbl">Watch</span></button>
+              <button class="swipe-btn shortlist" onclick="stackAction('shortlist')"><span class="icon">★</span><span class="lbl">Shortlist</span></button>
+              <button class="swipe-btn profile" onclick="stackOpenProfile()"><span class="icon">⊡</span><span class="lbl">Profile</span></button>
+            </div>
+          </div>
+          <div class="stack-right" id="stack-info"></div>
+        </div>
+      </div>
+
+      <!-- ROLL-UP PANE -->
+      <div class="pane" id="pane-rollup">
+        <div class="rollup-wrap">
+          <div class="rollup-config">
+            <div class="card">
+              <div class="card-title">Configuration</div>
+              <div style="margin-bottom:12px">
+                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Source</label>
+                <select class="filter-select" id="rub-source" style="width:100%" onchange="buildRollup()">
+                  <option value="all">All Database</option>
+                  <option value="shortlist">Shortlisted Only</option>
+                </select>
+              </div>
+              <div style="margin-bottom:12px">
+                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Budget: <span id="rub-budget-val" style="color:var(--amber);font-family:var(--font-mono)">₹300 Cr</span></label>
+                <input type="range" id="rub-budget" min="50" max="2000" step="50" value="300" oninput="document.getElementById('rub-budget-val').textContent='₹'+this.value+' Cr';buildRollup()" style="width:100%;accent-color:var(--amber)">
+              </div>
+              <div style="margin-bottom:12px">
+                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Combo Size</label>
+                <select class="filter-select" id="rub-size" style="width:100%" onchange="buildRollup()">
+                  <option value="2">2 Companies</option>
+                  <option value="3" selected>3 Companies</option>
+                  <option value="4">4 Companies</option>
+                  <option value="5">5 Companies</option>
+                </select>
+              </div>
+              <div style="margin-bottom:16px">
+                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Target Layers</label>
+                <div style="display:flex;flex-wrap:wrap;gap:4px" id="rub-layers">
+                  <div class="filter-chip on" data-l="content" onclick="toggleRubLayer(this)">Content</div>
+                  <div class="filter-chip on" data-l="delivery" onclick="toggleRubLayer(this)">Delivery</div>
+                  <div class="filter-chip on" data-l="tech" onclick="toggleRubLayer(this)">Tech</div>
+                  <div class="filter-chip on" data-l="admin" onclick="toggleRubLayer(this)">Admin</div>
+                  <div class="filter-chip on" data-l="sourcing" onclick="toggleRubLayer(this)">Sourcing</div>
+                </div>
+              </div>
+              <button class="btn pri" style="width:100%" onclick="buildRollup()">⊕ Build Combinations</button>
+            </div>
+            <div class="card" id="rub-summary-card" style="display:none">
+              <div class="card-title">Summary</div>
+              <div id="rub-summary"></div>
+            </div>
+          </div>
+          <div class="rollup-results" id="rollup-results">
+            <div class="empty"><div class="empty-icon">⊕</div><div class="empty-title">Configure & Build</div><div class="empty-sub">Set your parameters and click Build Combinations</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI ASSISTANT PANE -->
+      <div class="pane" id="pane-ai" style="padding:0;overflow:hidden">
+        <div class="chat-wrap">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg ai fade-in">
+              <div class="chat-bubble">
+                <strong>✦ HUKSA AI Assistant</strong><br><br>
+                I have full context on all your companies, deals, financials and pipeline. Ask me anything:<br><br>
+                • "Which delivery companies under ₹100Cr are best for acquisition?"<br>
+                • "Generate a deal memo for NIIT MTS"<br>
+                • "What's our total shortlisted acquisition cost?"<br>
+                • "Compare TalentEdge vs Centum Learning"
+              </div>
+            </div>
+          </div>
+          <div class="chat-suggestions" id="chat-suggestions">
+            <div class="chat-suggestion" onclick="askAI(this.textContent)">Best BUY opportunities right now?</div>
+            <div class="chat-suggestion" onclick="askAI(this.textContent)">Total shortlisted pipeline value?</div>
+            <div class="chat-suggestion" onclick="askAI(this.textContent)">Which companies have MTS full-stack?</div>
+            <div class="chat-suggestion" onclick="askAI(this.textContent)">Rank top 10 by acquisition fit</div>
+          </div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chat-input" placeholder="Ask anything about your deal universe..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+            <button class="btn pri" onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS PANE -->
+      <div class="pane" id="pane-reports">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Reports & Memos</div>
+            <div class="section-sub">AI-generated investment documents</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px">
+          <div class="card" style="cursor:pointer" onclick="generateReport('pipeline')">
+            <div style="font-size:24px;margin-bottom:10px">📊</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Pipeline Summary</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">Full overview of all shortlisted companies, combined value, layer coverage, and next steps.</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="generateReport('dealscreen')">
+            <div style="font-size:24px;margin-bottom:10px">🔍</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Deal Screen Report</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">IC-ready screening document with acquisition thesis, financials, and risk factors.</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="generateReport('marketmap')">
+            <div style="font-size:24px;margin-bottom:10px">🗺️</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Market Landscape</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">India MTS market overview, key players, layer gaps, and strategic opportunities.</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="showDeepDiveSelector()">
+            <div style="font-size:24px;margin-bottom:10px">📋</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Company Deep Dive</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">Full investment memo for any company — thesis, financials, team, risks, valuation.</div>
+          </div>
+        </div>
+        <div id="report-output"></div>
+      </div>
+
+      <!-- HUKSA PROFILE PANE -->
+      <div class="pane" id="pane-huksa">
+        <div id="huksa-content"></div>
+      </div>
+
+      <!-- COMPANY PROFILE PANE -->
+      <div class="pane" id="pane-company">
+        <div id="company-content"></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- IMPORT MODAL -->
+<div id="import-modal" style="display:none"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// HUKSA INTEL v2 — Core Engine
+// ═══════════════════════════════════════════════════════════════
+
+var COMPANIES = [];
+var STATE = {
+  tags: {},
+  shortlistWho: {},
+  activePane: 'universe',
+  activeCompany: null,
+  sortBy: 'fit',
+  expandRunning: false
+};
+
+var LAYER_COLORS = {
+  content: '#f59e0b',
+  delivery: '#22c55e',
+  tech: '#4f9cf9',
+  admin: '#a78bfa',
+  sourcing: '#ef4444'
+};
+
+var STACK_STATE = {
+  queue: [],
+  idx: 0,
+  layers: new Set(['content','delivery','tech','admin','sourcing']),
+  animating: false
+};
+
+// ── INIT ──────────────────────────────────────────────────────
+function init() {
+  loadFromStorage();
+  renderAll();
+  showPane('universe');
+  // Show import if no data
+  if (!COMPANIES.length) {
+    setTimeout(showImport, 500);
+  }
+}
+
+function renderAll() {
+  updateStats();
+  renderUniverse();
+}
+
+// ── STORAGE ───────────────────────────────────────────────────
+function loadFromStorage() {
+  try {
+    var d = localStorage.getItem('huksa_v2_data');
+    if (d) {
+      var p = JSON.parse(d);
+      COMPANIES = p.companies || [];
+      STATE.tags = p.tags || {};
+      STATE.shortlistWho = p.shortlistWho || {};
+    }
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  try {
+    localStorage.setItem('huksa_v2_data', JSON.stringify({
+      companies: COMPANIES,
+      tags: STATE.tags,
+      shortlistWho: STATE.shortlistWho
+    }));
+  } catch(e) {}
+}
+
+var saveTimer;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToStorage, 800);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+var PANE_TITLES = {
+  universe: 'Universe',
+  pipeline: 'Deal Pipeline',
+  shortlisted: 'Shortlisted',
+  review: 'Review Stack',
+  rollup: 'Roll-Up Builder',
+  ai: 'AI Assistant',
+  reports: 'Reports & Memos',
+  huksa: 'HUKSA Profile',
+  company: 'Company Profile'
+};
+
+function showPane(pane) {
+  STATE.activePane = pane;
+  document.querySelectorAll('.pane').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var el = document.getElementById('pane-' + pane);
+  if (el) el.classList.add('active');
+  var nav = document.querySelector('.nav-item[data-pane="' + pane + '"]');
+  if (nav) nav.classList.add('active');
+  document.getElementById('topbar-title').textContent = PANE_TITLES[pane] || pane;
+  document.getElementById('topbar-actions').innerHTML = '';
+
+  if (pane === 'universe') {
+    document.getElementById('topbar-actions').innerHTML =
+      '<button class="btn sm" onclick="showExpand()">+ Expand Database</button>';
+    renderUniverse();
+  }
+  if (pane === 'pipeline') renderPipeline();
+  if (pane === 'shortlisted') renderShortlisted();
+  if (pane === 'review') initStack();
+  if (pane === 'rollup') buildRollup();
+  if (pane === 'huksa') renderHuksa();
+}
+
+// ── STATS ─────────────────────────────────────────────────────
+function updateStats() {
+  var total = COMPANIES.length;
+  var sl = COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'shortlist'; }).length;
+  var wl = COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'watchlist'; }).length;
+  var rj = COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'rejected'; }).length;
+
+  setText('stat-total', total);
+  setText('stat-sl', sl);
+  setText('stat-watch', wl);
+  setText('stat-rej', rj);
+  setText('nb-total', total);
+  setText('nb-sl', sl);
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ── UNIVERSE ──────────────────────────────────────────────────
+function renderUniverse() {
+  updateStats();
+  renderUniverseStats();
+  renderCoTable();
+}
+
+function renderUniverseStats() {
+  var tags = STATE.tags;
+  var total = COMPANIES.length;
+  var sl = COMPANIES.filter(function(c) { return tags[c.id] === 'shortlist'; }).length;
+  var buy = COMPANIES.filter(function(c) {
+    var m = getMetrics(c); return m.signal === 'BUY';
+  }).length;
+  var totalRev = COMPANIES.reduce(function(s, c) {
+    var rn = safeRevNum(c); return s + rn;
+  }, 0);
+
+  var grid = document.getElementById('universe-stats');
+  if (!grid) return;
+  grid.innerHTML = [
+    {v: total, l: 'Total Companies', c: 'var(--accent)', sub: 'India MTS Universe'},
+    {v: sl, l: 'Shortlisted', c: 'var(--amber)', sub: 'Active targets'},
+    {v: buy, l: 'BUY Signal', c: 'var(--green)', sub: 'High conviction'},
+    {v: '₹' + Math.round(totalRev) + ' Cr', l: 'Combined Revenue', c: 'var(--purple)', sub: 'Universe total'}
+  ].map(function(s) {
+    return '<div class="stat-card" style="--accent-color:' + s.c + '">' +
+      '<div class="stat-card-val" style="color:' + s.c + '">' + s.v + '</div>' +
+      '<div class="stat-card-lbl">' + s.l + '</div>' +
+      '<div class="stat-card-sub">' + s.sub + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderCoTable() {
+  var q = (document.getElementById('u-search') || {}).value || '';
+  var tier = (document.getElementById('u-tier') || {}).value || '';
+  var layer = (document.getElementById('u-layer') || {}).value || '';
+  var status = (document.getElementById('u-status') || {}).value || '';
+  var sort = (document.getElementById('u-sort') || {}).value || 'fit';
+
+  q = q.toLowerCase();
+  var filtered = COMPANIES.filter(function(c) {
+    if (q && !((c.name || '').toLowerCase().includes(q) ||
+               (c.hq || '').toLowerCase().includes(q) ||
+               (c.seg || '').toLowerCase().includes(q))) return false;
+    if (tier && c.tier !== tier) return false;
+    if (layer && c.primaryLayer !== layer) return false;
+    var s = STATE.tags[c.id] || 'active';
+    if (status && s !== status) return false;
+    return true;
+  });
+
+  filtered.sort(function(a, b) {
+    if (sort === 'fit') return (b.huksaFit || 0) - (a.huksaFit || 0);
+    if (sort === 'rev') return (b.revNum || 0) - (a.revNum || 0);
+    if (sort === 'name') return (a.name || '').localeCompare(b.name || '');
+    if (sort === 'acq') {
+      var al = a.acqRange && a.acqRange[0] ? a.acqRange[0] : 0;
+      var bl = b.acqRange && b.acqRange[0] ? b.acqRange[0] : 0;
+      return al - bl;
+    }
+    return 0;
+  });
+
+  var cnt = document.getElementById('u-count');
+  if (cnt) cnt.textContent = filtered.length + ' shown';
+
+  var tbody = document.getElementById('co-tbody');
+  if (!tbody) return;
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">No companies match your filters</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.slice(0, 200).map(function(c) {
+    var lCol = LAYER_COLORS[c.primaryLayer] || '#888';
+    var m = getMetrics(c);
+    var tag = STATE.tags[c.id] || 'active';
+    var tagBadge = tag === 'shortlist' ? '<span class="badge amber">★ Shortlist</span>' :
+                   tag === 'watchlist' ? '<span class="badge purple">◎ Watch</span>' :
+                   tag === 'rejected' ? '<span class="badge" style="background:rgba(255,255,255,.04);color:var(--faint)">Pass</span>' : '';
+    var sigBadge = '<span class="badge ' + (m.signal === 'BUY' ? 'green' : m.signal === 'CONSIDER' ? 'blue' : 'red') + '">' + m.signal + '</span>';
+    var acqStr = c.acqRange && c.acqRange[0] && c.acqRange[0] < 10000
+      ? '₹' + c.acqRange[0] + '–' + c.acqRange[1] + ' Cr' : '—';
+    return '<tr class="co-row" onclick="openCompany(\'' + c.id + '\')">' +
+      '<td><div class="co-name-cell">' +
+        '<div class="co-avatar" style="background:' + lCol + '">' + (c.name || '?').charAt(0) + '</div>' +
+        '<div><div class="co-name">' + (c.name || c.id) + '</div>' +
+        '<div class="co-sub">' + (c.hq || '') + (c.hq && c.primaryLayer ? ' · ' : '') + (c.primaryLayer || '').toUpperCase() + '</div>' +
+        '</div></div></td>' +
+      '<td><span class="badge" style="background:' + lCol + '22;color:' + lCol + ';border-color:' + lCol + '44">' + (c.primaryLayer || '').toUpperCase() + '</span></td>' +
+      '<td><span style="font-size:11px;color:var(--muted)">' + (c.tier || '') + '</span></td>' +
+      '<td class="co-rev">' + (c.rev || '—') + '</td>' +
+      '<td style="font-size:11px;color:var(--green)">' + (c.ebitda || '—') + '</td>' +
+      '<td class="co-fit">' + (c.huksaFit || '—') + '/5</td>' +
+      '<td style="font-size:11px;color:var(--gold);font-family:var(--font-mono)">' + acqStr + '</td>' +
+      '<td>' + sigBadge + ' ' + tagBadge + '</td>' +
+      '<td><div style="display:flex;gap:4px">' +
+        '<button class="btn sm ghost" onclick="event.stopPropagation();setTag(\'' + c.id + '\',\'shortlist\')" title="Shortlist">★</button>' +
+        '<button class="btn sm ghost" onclick="event.stopPropagation();setTag(\'' + c.id + '\',\'watchlist\')" title="Watch">◎</button>' +
+        '<button class="btn sm ghost" onclick="event.stopPropagation();setTag(\'' + c.id + '\',\'rejected\')" title="Pass">✕</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ── TAG / STATUS ──────────────────────────────────────────────
+function setTag(id, tag) {
+  if (STATE.tags[id] === tag) {
+    delete STATE.tags[id];
+  } else {
+    STATE.tags[id] = tag;
+    if (tag === 'shortlist') STATE.shortlistWho[id] = 'Deepak';
+  }
+  scheduleSave();
+  updateStats();
+  renderCoTable();
+  showToast(tag === 'shortlist' ? '★ Shortlisted' : tag === 'watchlist' ? '◎ Added to Watch' : tag === 'rejected' ? 'Passed' : 'Tag removed');
+}
+
+// ── METRICS ───────────────────────────────────────────────────
+function getMetrics(co) {
+  var fit = co.huksaFit || 0;
+  var signal = fit >= 4 ? 'BUY' : fit >= 3 ? 'CONSIDER' : fit >= 2 ? 'WATCH' : 'PASS';
+  return { fit: fit, signal: signal };
+}
+
+function safeRevNum(co) {
+  var rn = parseFloat(co.revNum) || 0;
+  if (rn > 10000000) rn = Math.round(rn / 10000000);
+  else if (rn > 100000) rn = Math.round(rn / 100);
+  if (rn > 50000) rn = 0;
+  return rn;
+}
+
+function safeAcq(co) {
+  if (!co.acqRange || !co.acqRange[0]) return null;
+  var lo = parseFloat(co.acqRange[0]) || 0;
+  var hi = parseFloat(co.acqRange[1]) || lo;
+  if (lo > 10000000) { lo = Math.round(lo/10000000); hi = Math.round(hi/10000000); }
+  else if (lo > 100000) { lo = Math.round(lo/100); hi = Math.round(hi/100); }
+  if (lo > 10000) return null;
+  return [lo, hi];
+}
+
+// ── COMPANY PROFILE ───────────────────────────────────────────
+function openCompany(id) {
+  var co = COMPANIES.find(function(c) { return c.id === id; });
+  if (!co) return;
+  STATE.activeCompany = id;
+  renderCompanyProfile(co);
+  showPane('company');
+  document.getElementById('topbar-title').textContent = co.name || co.id;
+
+  // Back button
+  var acts = document.getElementById('topbar-actions');
+  acts.innerHTML = '<button class="btn sm ghost" onclick="showPane(STATE.prevPane||\'universe\')">← Back</button>' +
+    '<button class="btn sm ' + (STATE.tags[id] === 'shortlist' ? 'green' : '') + '" onclick="setTag(\'' + id + '\',\'shortlist\');this.className=\'btn sm green\'">' +
+    (STATE.tags[id] === 'shortlist' ? '★ Shortlisted' : '★ Shortlist') + '</button>';
+  STATE.prevPane = STATE.activePane;
+}
+
+function renderCompanyProfile(co) {
+  var lCol = LAYER_COLORS[co.primaryLayer] || '#888';
+  var m = getMetrics(co);
+  var tag = STATE.tags[co.id] || 'active';
+  var acq = safeAcq(co);
+  var acqStr = acq ? '₹' + acq[0] + '–' + acq[1] + ' Cr' : 'N/A';
+
+  var html =
+    '<div class="profile-wrap">' +
+    '<div class="profile-main">' +
+
+    // Header
+    '<div class="profile-header">' +
+    '<div class="profile-avatar" style="background:' + lCol + '">' + (co.name || '?').charAt(0) + '</div>' +
+    '<div style="flex:1">' +
+    '<div class="profile-name">' + (co.name || co.id) + '</div>' +
+    '<div class="profile-meta">' +
+    '<span class="badge" style="background:' + lCol + '22;color:' + lCol + ';border-color:' + lCol + '44">' + (co.primaryLayer || '').toUpperCase() + '</span>' +
+    '<span class="badge" style="background:rgba(255,255,255,.04);color:var(--muted)">' + (co.tier || '') + '</span>' +
+    (co.hq ? '<span class="badge blue">📍 ' + co.hq + '</span>' : '') +
+    (co.founded ? '<span class="badge" style="background:rgba(255,255,255,.04);color:var(--muted)">Est. ' + co.founded + '</span>' : '') +
+    '<span class="badge ' + (m.signal === 'BUY' ? 'green' : m.signal === 'CONSIDER' ? 'blue' : 'red') + '">' + m.signal + '</span>' +
+    (co.parent ? '<span class="badge amber">🏠 ' + co.parent + '</span>' : '') +
+    '</div></div></div>' +
+
+    // Tabs
+    '<div class="profile-tabs">' +
+    ['overview','financials','analysis','notes'].map(function(t) {
+      return '<div class="profile-tab' + (t === 'overview' ? ' active' : '') + '" data-tab="' + t + '" onclick="switchProfileTab(\'' + t + '\')">' + t.charAt(0).toUpperCase() + t.slice(1) + '</div>';
+    }).join('') +
+    '</div>' +
+
+    // Overview tab
+    '<div class="profile-tab-pane active" id="ptab-overview">' +
+    '<div class="metrics-row">' +
+    '<div class="metric-box"><div class="metric-val">' + (co.rev || 'N/A') + '</div><div class="metric-lbl">Revenue</div></div>' +
+    '<div class="metric-box"><div class="metric-val" style="color:var(--green)">' + (co.ebitda || 'N/A') + '</div><div class="metric-lbl">EBITDA</div></div>' +
+    '<div class="metric-box"><div class="metric-val" style="color:var(--gold)">' + acqStr + '</div><div class="metric-lbl">Acq Range</div></div>' +
+    '</div>' +
+
+    '<div class="mts-grid">' +
+    [{k:'c',n:'Content'},{k:'d',n:'Delivery'},{k:'a',n:'Admin'},{k:'s',n:'Sourcing'},{k:'t',n:'Tech'}].map(function(mk) {
+      var v = co.mts && co.mts[mk.k];
+      var isY = v === '✔' || v === 'Y' || v === '✓';
+      var isP = v === 'P';
+      var cls = isY ? 'yes' : isP ? 'partial' : 'no';
+      return '<div class="mts-cell ' + cls + '">' +
+        '<div class="mts-cell-key">' + mk.k.toUpperCase() + '</div>' +
+        '<div class="mts-cell-lbl">' + mk.n + '</div>' +
+        '<div class="mts-cell-val">' + (isY ? '✔ Full' : isP ? '~ Partial' : '✗ None') + '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+
+    '<div class="card" style="margin-bottom:12px">' +
+    '<div class="card-title">About</div>' +
+    '<div style="font-size:13px;line-height:1.8;color:var(--muted)">' + (co.model || co.seg || 'Corporate L&D company') + '</div>' +
+    '</div>' +
+
+    (co.strengths && co.strengths.length ? '<div class="card" style="margin-bottom:12px"><div class="card-title">Strengths</div>' +
+    co.strengths.map(function(s) { return '<div style="display:flex;gap:8px;padding:4px 0;font-size:12px;color:var(--muted)"><span style="color:var(--green)">✓</span>' + s + '</div>'; }).join('') + '</div>' : '') +
+
+    (co.limits && co.limits.length ? '<div class="card"><div class="card-title">Risks & Limits</div>' +
+    co.limits.map(function(l) { return '<div style="display:flex;gap:8px;padding:4px 0;font-size:12px;color:var(--muted)"><span style="color:var(--amber)">⚠</span>' + l + '</div>'; }).join('') + '</div>' : '') +
+
+    '</div>' + // overview tab
+
+    // Financials tab
+    '<div class="profile-tab-pane" id="ptab-financials">' +
+    '<div class="card"><div class="card-title">Financial Summary</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:2">' +
+    ['Revenue', 'EBITDA', 'PAT', 'Employees', 'Founded'].map(function(k) {
+      var val = k === 'Revenue' ? co.rev : k === 'EBITDA' ? co.ebitda : k === 'PAT' ? co.pat : k === 'Employees' ? co.emp : co.founded;
+      if (!val || val === 'N/A') return '';
+      return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
+        '<span>' + k + '</span><span style="font-family:var(--font-mono);font-weight:500;color:var(--text)">' + val + '</span></div>';
+    }).join('') +
+    '</div></div>' +
+    '</div>' +
+
+    // Analysis tab
+    '<div class="profile-tab-pane" id="ptab-analysis">' +
+    (co.whyAcquire ? '<div class="card" style="margin-bottom:12px"><div class="card-title" style="color:var(--green)">✓ Why Acquire</div><div style="font-size:13px;line-height:1.8;color:var(--muted)">' + co.whyAcquire + '</div></div>' : '') +
+    (co.whyNotAcquire ? '<div class="card" style="margin-bottom:12px"><div class="card-title" style="color:var(--red)">✗ Why Not</div><div style="font-size:13px;line-height:1.8;color:var(--muted)">' + co.whyNotAcquire + '</div></div>' : '') +
+    '<div class="card"><div class="card-title">AI Analysis</div>' +
+    '<div class="ai-box" id="ai-analysis-box-' + co.id + '">' +
+    (co.whyAcquire ? co.whyAcquire : 'Click below to generate AI acquisition analysis') +
+    '</div>' +
+    '<button class="btn pri" style="margin-top:10px;width:100%" onclick="generateWhyAcquire(\'' + co.id + '\')">✦ Generate Analysis</button>' +
+    '</div></div>' +
+
+    // Notes tab
+    '<div class="profile-tab-pane" id="ptab-notes">' +
+    '<div class="card"><div class="card-title">Deal Notes</div>' +
+    (co.acqNotes ? '<div style="font-size:13px;line-height:1.8;color:var(--muted);margin-bottom:12px">' + co.acqNotes + '</div>' : '') +
+    '<textarea id="co-notes-' + co.id + '" style="width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;color:var(--text);font-family:var(--font-body);font-size:12px;outline:none;resize:vertical" placeholder="Add your notes here..." onchange="saveNotes(\'' + co.id + '\',this.value)">' + (co.notes || '') + '</textarea>' +
+    '</div></div>' +
+
+    '</div>' + // profile-main
+
+    // Side panel
+    '<div class="profile-side">' +
+    '<div class="card">' +
+    '<div class="card-title">Quick Links</div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px">' +
+    '<a class="info-link" href="https://www.linkedin.com/search/results/companies/?keywords=' + encodeURIComponent(co.name || '') + '" target="_blank">💼 LinkedIn</a>' +
+    '<a class="info-link" href="https://www.google.com/search?q=' + encodeURIComponent((co.name || '') + ' India corporate training') + '" target="_blank">🔍 Google</a>' +
+    '<a class="info-link" href="https://news.google.com/search?q=' + encodeURIComponent((co.name || '') + ' India') + '" target="_blank">📰 News</a>' +
+    '</div></div>' +
+
+    '<div class="card">' +
+    '<div class="card-title">Key Stats</div>' +
+    '<div style="font-size:12px;line-height:2.2;color:var(--muted)">' +
+    '<div style="display:flex;justify-content:space-between"><span>Fit Score</span><span style="font-family:var(--font-mono);color:var(--amber)">' + (co.huksaFit || '?') + '/5</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span>HQ</span><span style="color:var(--text)">' + (co.hq || '—') + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span>Employees</span><span style="color:var(--text)">' + (co.emp || '—') + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span>Segment</span><span style="color:var(--text);max-width:160px;text-align:right;font-size:11px">' + (co.seg || '—') + '</span></div>' +
+    '</div></div>' +
+
+    (co.clients && co.clients.length ? '<div class="card"><div class="card-title">Key Clients</div><div style="display:flex;flex-wrap:wrap;gap:5px">' +
+    co.clients.map(function(c) { return '<span style="padding:3px 8px;border-radius:4px;font-size:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">' + c + '</span>'; }).join('') +
+    '</div></div>' : '') +
+
+    '</div>' + // profile-side
+    '</div>'; // profile-wrap
+
+  document.getElementById('company-content').innerHTML = html;
+}
+
+function switchProfileTab(tab) {
+  document.querySelectorAll('.profile-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === tab); });
+  document.querySelectorAll('.profile-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  var el = document.getElementById('ptab-' + tab);
+  if (el) el.classList.add('active');
+}
+
+function saveNotes(id, val) {
+  var co = COMPANIES.find(function(c) { return c.id === id; });
+  if (co) { co.notes = val; scheduleSave(); }
+}
+
+// ── PIPELINE (KANBAN) ─────────────────────────────────────────
+var PIPELINE_STAGES = [
+  { id: 'active', label: 'Watchlist', color: 'var(--muted)' },
+  { id: 'shortlist', label: 'Shortlisted', color: 'var(--amber)' },
+  { id: 'diligence', label: 'In Diligence', color: 'var(--accent)' },
+  { id: 'pass', label: 'Passed', color: 'var(--faint)' }
+];
+
+function renderPipeline() {
+  var board = document.getElementById('pipeline-board');
+  if (!board) return;
+  var stages = {
+    active: COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'watchlist'; }),
+    shortlist: COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'shortlist'; }),
+    diligence: COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'diligence'; }),
+    pass: COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'rejected'; }).slice(0, 20)
+  };
+
+  board.innerHTML = PIPELINE_STAGES.map(function(stage) {
+    var cos = stages[stage.id] || [];
+    return '<div class="pipeline-col">' +
+      '<div class="pipeline-col-head">' +
+      '<div class="pipeline-col-title" style="color:' + stage.color + '">' + stage.label + '</div>' +
+      '<div class="pipeline-col-count">' + cos.length + '</div>' +
+      '</div>' +
+      '<div class="pipeline-cards">' +
+      cos.map(function(co) {
+        var lCol = LAYER_COLORS[co.primaryLayer] || '#888';
+        return '<div class="pipeline-card" onclick="openCompany(\'' + co.id + '\')">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+          '<div style="width:24px;height:24px;border-radius:5px;background:' + lCol + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">' + (co.name || '?').charAt(0) + '</div>' +
+          '<div class="pipeline-card-name">' + (co.name || co.id) + '</div></div>' +
+          '<div class="pipeline-card-meta">' + (co.hq || '') + ' · ' + (co.rev || 'N/A') + ' · Fit ' + (co.huksaFit || '?') + '/5</div>' +
+          '</div>';
+      }).join('') +
+      '</div></div>';
+  }).join('');
+}
+
+// ── SHORTLISTED ───────────────────────────────────────────────
+function renderShortlisted() {
+  var shortlisted = COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'shortlist'; });
+  shortlisted.sort(function(a, b) { return (b.huksaFit || 0) - (a.huksaFit || 0); });
+
+  var q = (document.getElementById('sl-search') || {}).value || '';
+  q = q.toLowerCase();
+  if (q) shortlisted = shortlisted.filter(function(c) {
+    return (c.name || '').toLowerCase().includes(q) || (c.hq || '').toLowerCase().includes(q);
+  });
+
+  var sub = document.getElementById('sl-sub');
+  if (sub) sub.textContent = shortlisted.length + ' companies shortlisted';
+
+  // Stats
+  var totalRev = shortlisted.reduce(function(s, c) { return s + safeRevNum(c); }, 0);
+  var avgFit = shortlisted.length ? (shortlisted.reduce(function(s, c) { return s + (c.huksaFit || 0); }, 0) / shortlisted.length).toFixed(1) : 0;
+  var totalAcqLo = shortlisted.reduce(function(s, c) { var a = safeAcq(c); return s + (a ? a[0] : 0); }, 0);
+  var totalAcqHi = shortlisted.reduce(function(s, c) { var a = safeAcq(c); return s + (a ? a[1] : 0); }, 0);
+
+  var statsEl = document.getElementById('sl-stats');
+  if (statsEl) statsEl.innerHTML = [
+    {v: shortlisted.length, l: 'Companies', c: 'var(--amber)'},
+    {v: '₹' + Math.round(totalRev) + ' Cr', l: 'Combined Revenue', c: 'var(--accent)'},
+    {v: avgFit + '/5', l: 'Avg Fit Score', c: 'var(--gold)'},
+    {v: '₹' + Math.round(totalAcqLo) + '–' + Math.round(totalAcqHi) + ' Cr', l: 'Total Acq Range', c: 'var(--green)'}
+  ].map(function(s) {
+    return '<div class="stat-card" style="--accent-color:' + s.c + '">' +
+      '<div class="stat-card-val" style="color:' + s.c + '">' + s.v + '</div>' +
+      '<div class="stat-card-lbl">' + s.l + '</div></div>';
+  }).join('');
+
+  var grid = document.getElementById('sl-grid');
+  if (!grid) return;
+  if (!shortlisted.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">★</div><div class="empty-title">No companies shortlisted yet</div><div class="empty-sub">Use ★ buttons in the Universe or Review Stack</div></div>';
+    return;
+  }
+
+  grid.innerHTML = shortlisted.map(function(co) {
+    var lCol = LAYER_COLORS[co.primaryLayer] || '#888';
+    var m = getMetrics(co);
+    var acq = safeAcq(co);
+    return '<div class="sl-card" onclick="openCompany(\'' + co.id + '\')" onmouseover="this.style.borderColor=\'' + lCol + '\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+      '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">' +
+      '<div class="co-avatar" style="background:' + lCol + ';width:38px;height:38px;border-radius:9px;font-size:16px">' + (co.name || '?').charAt(0) + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (co.name || co.id) + '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + (co.hq || '') + ' · ' + (co.primaryLayer || '').toUpperCase() + '</div>' +
+      '</div>' +
+      '<span class="badge ' + (m.signal === 'BUY' ? 'green' : m.signal === 'CONSIDER' ? 'blue' : 'red') + '">' + m.signal + '</span>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px">' +
+      '<div style="background:var(--surface2);border-radius:6px;padding:8px;text-align:center">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--accent);font-family:var(--font-mono)">' + (co.rev || 'N/A') + '</div>' +
+        '<div style="font-size:8px;color:var(--faint);text-transform:uppercase;margin-top:2px">Revenue</div></div>' +
+      '<div style="background:var(--surface2);border-radius:6px;padding:8px;text-align:center">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--amber);font-family:var(--font-mono)">' + (co.huksaFit || '?') + '/5</div>' +
+        '<div style="font-size:8px;color:var(--faint);text-transform:uppercase;margin-top:2px">Fit</div></div>' +
+      '<div style="background:var(--surface2);border-radius:6px;padding:8px;text-align:center">' +
+        '<div style="font-size:10px;font-weight:600;color:var(--gold);font-family:var(--font-mono)">' + (acq ? '₹'+acq[0]+'–'+acq[1]+' Cr' : 'N/A') + '</div>' +
+        '<div style="font-size:8px;color:var(--faint);text-transform:uppercase;margin-top:2px">Acq Range</div></div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+      '<span style="font-size:10px;color:var(--muted)">★ by <strong style="color:var(--amber)">' + (STATE.shortlistWho[co.id] || 'Deepak') + '</strong></span>' +
+      '<button onclick="event.stopPropagation();setTag(\'' + co.id + '\',\'shortlist\');renderShortlisted()" style="padding:3px 8px;font-size:10px;border:1px solid rgba(239,68,68,.2);border-radius:5px;background:rgba(239,68,68,.06);color:var(--red);cursor:pointer;font-family:inherit">Remove</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ── REVIEW STACK ──────────────────────────────────────────────
+function initStack() {
+  STACK_STATE.animating = false;
+  var queue = COMPANIES.filter(function(c) {
+    var tag = STATE.tags[c.id];
+    if (tag === 'rejected' || tag === 'shortlist') return false;
+    return STACK_STATE.layers.has(c.primaryLayer);
+  });
+  // Sort unreviewed first
+  queue.sort(function(a, b) { return (b.huksaFit || 0) - (a.huksaFit || 0); });
+  STACK_STATE.queue = queue;
+  STACK_STATE.idx = 0;
+  loadStackCard();
+  setText('stack-count', queue.length + ' remaining');
+}
+
+function toggleStackLayer(el) {
+  var layer = el.dataset.layer;
+  if (STACK_STATE.layers.has(layer)) STACK_STATE.layers.delete(layer);
+  else STACK_STATE.layers.add(layer);
+  el.classList.toggle('on', STACK_STATE.layers.has(layer));
+  initStack();
+}
+
+function loadStackCard() {
+  var stage = document.getElementById('stack-stage');
+  var info = document.getElementById('stack-info');
+  if (!stage) return;
+
+  var co = STACK_STATE.queue[STACK_STATE.idx];
+  if (!co) {
+    stage.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">All done!</div><div class="empty-sub">You\'ve reviewed all companies in this filter.</div><button class="btn" style="margin-top:12px" onclick="initStack()">⟳ Reset Queue</button></div>';
+    if (info) info.innerHTML = '';
+    return;
+  }
+
+  // Ghost card
+  var nextCo = STACK_STATE.queue[STACK_STATE.idx + 1];
+  var lCol = LAYER_COLORS[co.primaryLayer] || '#888';
+  var m = getMetrics(co);
+  var acq = safeAcq(co);
+
+  stage.innerHTML =
+    (nextCo ? '<div class="swipe-card ghost"><div style="height:200px"></div></div>' : '') +
+    '<div class="swipe-card front" id="stack-card">' +
+    '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">' +
+    '<div style="width:48px;height:48px;border-radius:11px;background:' + lCol + ';display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0">' + (co.name || '?').charAt(0) + '</div>' +
+    '<div style="flex:1">' +
+    '<div style="font-family:var(--font-display);font-size:20px;color:var(--text);line-height:1.1">' + (co.name || co.id) + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + (co.hq || '') + ' · ' + (co.primaryLayer || '').toUpperCase() + (co.founded && co.founded !== 'N/A' ? ' · Est. ' + co.founded : '') + '</div>' +
+    '</div></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">' +
+    '<span class="badge ' + (m.signal === 'BUY' ? 'green' : m.signal === 'CONSIDER' ? 'blue' : 'red') + '">' + m.signal + '</span>' +
+    '<span class="badge amber">Fit ' + (co.huksaFit || '?') + '/5</span>' +
+    '<span class="badge blue">MTS ' + (co.score || '?') + '/5</span>' +
+    '<span class="badge" style="background:rgba(255,255,255,.04);color:var(--muted)">' + (co.tier || '') + '</span>' +
+    (co.parent ? '<span class="badge amber">🏠 ' + co.parent + '</span>' : '') +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">' +
+      '<div style="font-family:var(--font-mono);font-size:14px;color:var(--accent)">' + (co.rev || 'N/A') + '</div>' +
+      '<div style="font-size:9px;color:var(--faint);margin-top:3px;text-transform:uppercase">Revenue</div></div>' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">' +
+      '<div style="font-family:var(--font-mono);font-size:14px;color:var(--green)">' + (co.ebitda || 'N/A') + '</div>' +
+      '<div style="font-size:9px;color:var(--faint);margin-top:3px;text-transform:uppercase">EBITDA</div></div>' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">' +
+      '<div style="font-family:var(--font-mono);font-size:13px;color:var(--gold)">' + (acq ? '₹'+acq[0]+'–'+acq[1]+' Cr' : 'N/A') + '</div>' +
+      '<div style="font-size:9px;color:var(--faint);margin-top:3px;text-transform:uppercase">Acq Range</div></div>' +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.7;padding:10px;background:var(--surface2);border-radius:7px">' + (co.model || co.seg || 'Corporate training company') + '</div>' +
+    '</div>';
+
+  // Right info panel
+  if (info) loadStackInfo(co);
+}
+
+function loadStackInfo(co) {
+  var info = document.getElementById('stack-info');
+  if (!info) return;
+
+  var html = '';
+  // Quick links
+  html += '<div class="info-section">' +
+    '<div class="info-label">Quick Links</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
+    '<a class="info-link" href="https://www.linkedin.com/search/results/companies/?keywords=' + encodeURIComponent(co.name || '') + '" target="_blank">💼 LinkedIn</a>' +
+    '<a class="info-link" href="https://www.google.com/search?q=' + encodeURIComponent((co.name || '') + ' India') + '" target="_blank">🔍 Google</a>' +
+    '<a class="info-link" href="https://news.google.com/search?q=' + encodeURIComponent(co.name || '') + '" target="_blank">📰 News</a>' +
+    '</div></div>';
+
+  // About
+  if (co.parent) html += '<div class="info-section">' +
+    '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--amber-bg);border:1px solid rgba(245,158,11,.2);border-radius:7px">' +
+    '<span style="font-size:16px">🏠</span>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--amber)">Part of ' + co.parent + '</div>' +
+    '<div style="font-size:10px;color:var(--muted)">Subsidiary / Division</div></div></div></div>';
+
+  html += '<div class="info-section"><div class="info-label">Financials</div>' +
+    [['Revenue', co.rev, 'var(--accent)'], ['EBITDA', co.ebitda, 'var(--green)'], ['Employees', co.emp, 'var(--text)']].filter(function(r) { return r[1] && r[1] !== 'N/A'; }).map(function(r) {
+      return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px">' +
+        '<span style="color:var(--muted)">' + r[0] + '</span>' +
+        '<span style="font-family:var(--font-mono);font-weight:600;color:' + r[2] + '">' + r[1] + '</span></div>';
+    }).join('') + '</div>';
+
+  if (co.acqNotes) html += '<div class="info-section"><div class="info-label">Deal Notes</div>' +
+    '<div style="font-size:11px;line-height:1.7;color:var(--muted);background:var(--amber-bg);border:1px solid rgba(245,158,11,.15);border-radius:6px;padding:8px 10px">' + co.acqNotes + '</div></div>';
+
+  if (co.whyAcquire) {
+    html += '<div class="info-section"><div class="info-label">AI Analysis</div>' +
+      '<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">✓ Why Acquire</div>' +
+      '<div style="font-size:11px;line-height:1.7;color:var(--muted);margin-bottom:8px">' + co.whyAcquire + '</div>';
+    if (co.whyNotAcquire) html += '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">✗ Why Not</div>' +
+      '<div style="font-size:11px;line-height:1.7;color:var(--muted)">' + co.whyNotAcquire + '</div>';
+    html += '</div>';
+  } else {
+    html += '<div class="info-section"><div class="info-label">AI Analysis</div>' +
+      '<button class="btn sm" style="width:100%" onclick="generateWhyAcquire(\'' + co.id + '\')">✦ Generate Analysis</button></div>';
+  }
+
+  if (co.strengths && co.strengths.length) html += '<div class="info-section"><div class="info-label">Strengths & Risks</div>' +
+    co.strengths.map(function(s) { return '<div style="display:flex;gap:6px;font-size:11px;color:var(--muted);padding:2px 0"><span style="color:var(--green)">✓</span>' + s + '</div>'; }).join('') +
+    (co.limits || []).map(function(l) { return '<div style="display:flex;gap:6px;font-size:11px;color:var(--muted);padding:2px 0"><span style="color:var(--amber)">⚠</span>' + l + '</div>'; }).join('') +
+    '</div>';
+
+  info.innerHTML = html;
+}
+
+function stackAction(action) {
+  if (STACK_STATE.animating) { STACK_STATE.animating = false; }
+  var co = STACK_STATE.queue[STACK_STATE.idx];
+  if (!co) return;
+  STACK_STATE.animating = true;
+
+  if (action !== 'skip') {
+    setTag(co.id, action);
+  }
+
+  var card = document.getElementById('stack-card');
+  if (card) {
+    card.style.transition = 'transform .18s ease, opacity .18s ease';
+    if (action === 'rejected') card.style.transform = 'translateX(-140%) rotate(-15deg)';
+    else if (action === 'shortlist') card.style.transform = 'translateX(140%) rotate(15deg)';
+    else if (action === 'watchlist') card.style.transform = 'translateY(-100%) scale(.9)';
+    else card.style.transform = 'translateY(80px) scale(.95)';
+    card.style.opacity = '0';
+  }
+
+  setTimeout(function() {
+    STACK_STATE.idx++;
+    STACK_STATE.animating = false;
+    loadStackCard();
+    setText('stack-count', Math.max(0, STACK_STATE.queue.length - STACK_STATE.idx) + ' remaining');
+  }, 180);
+}
+
+function stackOpenProfile() {
+  var co = STACK_STATE.queue[STACK_STATE.idx];
+  if (co) openCompany(co.id);
+}
+
+// ── ROLL-UP BUILDER ───────────────────────────────────────────
+function toggleRubLayer(el) {
+  el.classList.toggle('on');
+}
+
+function buildRollup() {
+  var budget = parseInt(document.getElementById('rub-budget').value) || 300;
+  var size = parseInt(document.getElementById('rub-size').value) || 3;
+  var source = document.getElementById('rub-source').value;
+  var activeLayers = new Set();
+  document.querySelectorAll('#rub-layers .filter-chip.on').forEach(function(el) {
+    activeLayers.add(el.dataset.l);
+  });
+
+  var tags = STATE.tags;
+  var pool = source === 'shortlist'
+    ? COMPANIES.filter(function(c) { return tags[c.id] === 'shortlist'; })
+    : COMPANIES.filter(function(c) { return tags[c.id] !== 'rejected'; });
+
+  var eligible = pool.filter(function(c) {
+    var acq = safeAcq(c);
+    return acq && acq[0] > 0 && acq[0] <= budget;
+  });
+
+  if (eligible.length < size) {
+    document.getElementById('rollup-results').innerHTML =
+      '<div class="empty"><div class="empty-icon">⊕</div><div class="empty-title">Not enough companies</div><div class="empty-sub">Increase budget or change source filter. Need at least ' + size + ' companies with acquisition ranges set.</div></div>';
+    return;
+  }
+
+  // Find combinations
+  var combos = [];
+  function combine(start, current, cost) {
+    if (current.length === size) {
+      var layers = new Set(current.map(function(c) { return c.primaryLayer; }));
+      var coverage = 0;
+      activeLayers.forEach(function(l) { if (layers.has(l)) coverage++; });
+      var totalRev = current.reduce(function(s, c) { return s + safeRevNum(c); }, 0);
+      var avgFit = current.reduce(function(s, c) { return s + (c.huksaFit || 0); }, 0) / current.length;
+      combos.push({ companies: current.slice(), cost: cost, layers: layers, coverage: coverage, totalRev: totalRev, avgFit: avgFit });
+      return;
+    }
+    for (var i = start; i < eligible.length; i++) {
+      var acq = safeAcq(eligible[i]);
+      var newCost = cost + (acq ? acq[0] : 0);
+      if (newCost <= budget) {
+        current.push(eligible[i]);
+        combine(i + 1, current, newCost);
+        current.pop();
+      }
+      if (combos.length > 50) return;
+    }
+  }
+  combine(0, [], 0);
+
+  combos.sort(function(a, b) {
+    var scoreA = a.coverage * 3 + a.avgFit - (a.cost / budget);
+    var scoreB = b.coverage * 3 + b.avgFit - (b.cost / budget);
+    return scoreB - scoreA;
+  });
+
+  var top = combos.slice(0, 8);
+  if (!top.length) {
+    document.getElementById('rollup-results').innerHTML =
+      '<div class="empty"><div class="empty-icon">⊕</div><div class="empty-title">No combinations fit</div><div class="empty-sub">Try increasing budget or reducing combo size</div></div>';
+    return;
+  }
+
+  // Show summary
+  var sumCard = document.getElementById('rub-summary-card');
+  if (sumCard) {
+    sumCard.style.display = 'block';
+    document.getElementById('rub-summary').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);line-height:2">' +
+      '<div style="display:flex;justify-content:space-between"><span>Combinations found</span><span style="font-family:var(--font-mono);color:var(--text)">' + combos.length + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between"><span>Eligible companies</span><span style="font-family:var(--font-mono);color:var(--text)">' + eligible.length + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between"><span>Budget</span><span style="font-family:var(--font-mono);color:var(--amber)">₹' + budget + ' Cr</span></div>' +
+      '</div>';
+  }
+
+  document.getElementById('rollup-results').innerHTML =
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Top ' + top.length + ' combinations by layer coverage + fit score</div>' +
+    top.map(function(combo, idx) {
+      var layers = Array.from(combo.layers);
+      return '<div class="combo-card">' +
+        '<div class="combo-head">' +
+        '<div><div class="combo-label">' + String.fromCharCode(65 + idx) + '. ' + combo.companies.map(function(c) { return c.short || c.name.substring(0, 12); }).join(' + ') + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:3px">Coverage: ' + Array.from(combo.layers).join(', ') + '</div></div>' +
+        '<span class="badge ' + (combo.coverage >= 4 ? 'green' : combo.coverage >= 3 ? 'blue' : 'amber') + '">' + combo.coverage + '/' + activeLayers.size + ' layers</span>' +
+        '</div>' +
+        '<div class="combo-stats">' +
+        '<div class="combo-stat"><div class="combo-stat-val">₹' + Math.round(combo.cost) + ' Cr</div><div class="combo-stat-lbl">Est. Cost</div></div>' +
+        '<div class="combo-stat"><div class="combo-stat-val" style="color:var(--accent)">₹' + Math.round(combo.totalRev) + ' Cr</div><div class="combo-stat-lbl">Combined Rev</div></div>' +
+        '<div class="combo-stat"><div class="combo-stat-val" style="color:var(--amber)">' + combo.avgFit.toFixed(1) + '/5</div><div class="combo-stat-lbl">Avg Fit</div></div>' +
+        '</div>' +
+        combo.companies.map(function(c) {
+          var lCol = LAYER_COLORS[c.primaryLayer] || '#888';
+          return '<div class="combo-co-row" onclick="openCompany(\'' + c.id + '\')">' +
+            '<div style="width:26px;height:26px;border-radius:6px;background:' + lCol + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">' + (c.name || '?').charAt(0) + '</div>' +
+            '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (c.name || c.id) + '</div>' +
+            '<div style="font-size:10px;color:var(--muted)">' + (c.hq || '') + ' · ' + (c.primaryLayer || '').toUpperCase() + '</div></div>' +
+            '<span style="font-family:var(--font-mono);font-size:10px;color:var(--accent)">' + (c.rev || 'N/A') + '</span>' +
+            '</div>';
+        }).join('') +
+        '</div>';
+    }).join('');
+}
+
+// ── AI ASSISTANT ──────────────────────────────────────────────
+function sendChat() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  input.style.height = 'auto';
+  askAI(msg);
+}
+
+function askAI(msg) {
+  addChatMsg(msg, 'user');
+  var thinking = addChatMsg('<span class="spin"></span> Thinking...', 'ai');
+
+  var context = buildAIContext();
+  var prompt = context + '\n\nUser question: ' + msg + '\n\nAnswer concisely with specific data from the database. Use company names, numbers, and facts.';
+
+  callAI(prompt).then(function(response) {
+    thinking.querySelector('.chat-bubble').innerHTML = response;
+    var msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }).catch(function(err) {
+    thinking.querySelector('.chat-bubble').innerHTML = '⚠ Error: ' + err.message;
+  });
+}
+
+function addChatMsg(content, type) {
+  var msgs = document.getElementById('chat-messages');
+  if (!msgs) return { querySelector: function() { return { innerHTML: '' }; } };
+  var div = document.createElement('div');
+  div.className = 'chat-msg ' + type + ' fade-in';
+  div.innerHTML = '<div class="chat-bubble">' + content + '</div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function buildAIContext() {
+  var tags = STATE.tags;
+  var sl = COMPANIES.filter(function(c) { return tags[c.id] === 'shortlist'; });
+  var wl = COMPANIES.filter(function(c) { return tags[c.id] === 'watchlist'; });
+  var totalRev = COMPANIES.reduce(function(s, c) { return s + safeRevNum(c); }, 0);
+  var slRev = sl.reduce(function(s, c) { return s + safeRevNum(c); }, 0);
+
+  return 'You are an AI M&A analyst for HUKSA Capital. Database context:\n' +
+    'Total companies: ' + COMPANIES.length + '\n' +
+    'Shortlisted: ' + sl.length + ' companies, combined revenue ₹' + Math.round(slRev) + ' Cr\n' +
+    'Watchlist: ' + wl.length + ' companies\n' +
+    'Total universe revenue: ₹' + Math.round(totalRev) + ' Cr\n\n' +
+    'Top shortlisted: ' + sl.slice(0, 10).map(function(c) { return c.name + ' (' + c.primaryLayer + ', ' + c.rev + ', Fit ' + c.huksaFit + '/5)'; }).join('; ') + '\n\n' +
+    'Top BUY signals: ' + COMPANIES.filter(function(c) { return (c.huksaFit || 0) >= 4; }).slice(0, 10).map(function(c) { return c.name + ' (Fit ' + c.huksaFit + '/5, ' + c.rev + ')'; }).join('; ');
+}
+
+// ── AI ANALYSIS ───────────────────────────────────────────────
+function generateWhyAcquire(id) {
+  var co = COMPANIES.find(function(c) { return c.id === id; });
+  if (!co) return;
+  var box = document.getElementById('ai-analysis-box-' + id);
+  if (box) box.innerHTML = '<span class="spin"></span> Analysing ' + co.short + '...';
+
+  var clients = (co.clients || []).slice(0, 5).join(', ') || 'N/A';
+  var str = (co.strengths || []).join('; ') || 'N/A';
+  var lim = (co.limits || []).join('; ') || 'N/A';
+  var mts = ['C', 'D', 'A', 'S', 'T'].map(function(k, i) {
+    return k + ':' + (co.mts && co.mts[['c','d','a','s','t'][i]] || 'N');
+  }).join(',');
+
+  var prompt = 'M&A analysis for HUKSA Capital. Company: ' + co.name +
+    ' | HQ: ' + co.hq + ' | Founded: ' + co.founded + ' | Emp: ' + co.emp +
+    ' | Rev: ' + co.rev + ' | EBITDA: ' + co.ebitda + ' | PAT: ' + co.pat +
+    ' | Layer: ' + co.primaryLayer + ' | Tier: ' + co.tier +
+    ' | MTS: [' + mts + '] | Fit: ' + co.huksaFit + '/5 | Clients: ' + clients +
+    ' | Strengths: ' + str + ' | Risks: ' + lim +
+    '. Return ONLY JSON {whyAcquire: "3 SPECIFIC sentences about THIS company MTS gap fill, revenue synergy, acquisition timing", whyNotAcquire: "2 SPECIFIC risk sentences with real data"}. No markdown.';
+
+  callAI(prompt).then(function(txt) {
+    try {
+      var s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+      if (s >= 0 && e > s) {
+        var p = JSON.parse(txt.substring(s, e + 1));
+        co.whyAcquire = p.whyAcquire || '';
+        co.whyNotAcquire = p.whyNotAcquire || '';
+        scheduleSave();
+        if (box) {
+          box.innerHTML = '<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">✓ Why Acquire</div><div>' + co.whyAcquire + '</div></div>' +
+            '<div><div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px">✗ Why Not</div><div>' + co.whyNotAcquire + '</div></div>';
+        }
+        // Reload stack info if in review
+        if (STATE.activePane === 'review') loadStackInfo(co);
+      }
+    } catch(err) {
+      if (box) box.innerHTML = '⚠ Parse error. Try again.';
+    }
+  }).catch(function(err) {
+    if (box) box.innerHTML = '⚠ ' + err.message;
+  });
+}
+
+// ── REPORTS ───────────────────────────────────────────────────
+function generateReport(type) {
+  var out = document.getElementById('report-output');
+  if (!out) return;
+  out.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:20px;color:var(--muted)"><span class="spin"></span> Generating report...</div>';
+
+  var sl = COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'shortlist'; });
+  var prompt = '';
+
+  if (type === 'pipeline') {
+    prompt = 'Write a professional M&A pipeline summary for HUKSA Capital.\n' +
+      'Shortlisted companies (' + sl.length + '): ' + sl.map(function(c) { return c.name + ' (' + c.rev + ', ' + c.primaryLayer + ', Fit ' + c.huksaFit + '/5)'; }).join('; ') + '\n' +
+      'Total combined revenue: ₹' + Math.round(sl.reduce(function(s, c) { return s + safeRevNum(c); }, 0)) + ' Cr\n' +
+      'Write: Executive Summary, Portfolio Overview by Layer, Key Acquisition Thesis, Combined Value Creation, Next Steps. 400 words. Professional IC memo style.';
+  } else if (type === 'dealscreen') {
+    prompt = 'Write a deal screening report for HUKSA Capital MTS roll-up strategy.\n' +
+      'Universe: ' + COMPANIES.length + ' companies tracked\n' +
+      'Top targets: ' + COMPANIES.filter(function(c) { return (c.huksaFit || 0) >= 4; }).slice(0, 5).map(function(c) { return c.name; }).join(', ') + '\n' +
+      'Write: Market Overview, Screening Criteria, Top 5 Targets with thesis, Risk Factors, Recommendation. 500 words.';
+  } else if (type === 'marketmap') {
+    prompt = 'Write an India Managed Training Services (MTS) market landscape report.\n' +
+      'Database of ' + COMPANIES.length + ' companies across Content, Delivery, Tech, Admin, Sourcing layers.\n' +
+      'Write: Market Size & Growth, Key Players by Layer, HUKSA Positioning, Whitespace Opportunities, M&A Rationale. 400 words.';
+  }
+
+  callAI(prompt).then(function(text) {
+    out.innerHTML = '<div class="card">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">' +
+      '<div class="card-title" style="margin-bottom:0">' + (type === 'pipeline' ? 'Pipeline Summary' : type === 'dealscreen' ? 'Deal Screen Report' : 'Market Landscape') + '</div>' +
+      '<button class="btn sm" onclick="navigator.clipboard.writeText(document.getElementById(\'report-text\').innerText)">Copy</button>' +
+      '</div>' +
+      '<div id="report-text" style="font-size:13px;line-height:1.9;color:var(--muted);white-space:pre-wrap">' + text + '</div>' +
+      '</div>';
+  }).catch(function(err) {
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error generating report</div><div class="empty-sub">' + err.message + '</div></div>';
+  });
+}
+
+function showDeepDiveSelector() {
+  var out = document.getElementById('report-output');
+  if (!out) return;
+  var sl = COMPANIES.filter(function(c) { return STATE.tags[c.id] === 'shortlist'; });
+  var cos = sl.length ? sl : COMPANIES.slice(0, 20);
+  out.innerHTML = '<div class="card"><div class="card-title">Select Company for Deep Dive</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">' +
+    cos.map(function(c) {
+      return '<div class="btn" style="justify-content:flex-start;gap:8px" onclick="generateDeepDive(\'' + c.id + '\')">' +
+        '<div style="width:24px;height:24px;border-radius:5px;background:' + (LAYER_COLORS[c.primaryLayer] || '#888') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">' + (c.name || '?').charAt(0) + '</div>' +
+        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (c.name || c.id) + '</span></div>';
+    }).join('') +
+    '</div></div>';
+}
+
+function generateDeepDive(id) {
+  var co = COMPANIES.find(function(c) { return c.id === id; });
+  if (!co) return;
+  var out = document.getElementById('report-output');
+  if (out) out.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:20px;color:var(--muted)"><span class="spin"></span> Writing deep dive for ' + co.name + '...</div>';
+
+  var prompt = 'Write a full investment memo for HUKSA Capital on ' + co.name + '.\n' +
+    'Data: HQ=' + co.hq + ', Rev=' + co.rev + ', EBITDA=' + co.ebitda + ', Layer=' + co.primaryLayer + ', Tier=' + co.tier + ', Fit=' + co.huksaFit + '/5\n' +
+    'Clients: ' + (co.clients || []).join(', ') + '\n' +
+    'Strengths: ' + (co.strengths || []).join('; ') + '\n' +
+    'Risks: ' + (co.limits || []).join('; ') + '\n' +
+    'Write sections: Executive Summary, Company Overview, Financial Analysis, MTS Strategic Fit, Acquisition Thesis, Risks & Mitigants, Valuation Considerations, Recommendation. 600 words. IC memo style.';
+
+  callAI(prompt).then(function(text) {
+    if (out) out.innerHTML = '<div class="card">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">' +
+      '<div><div class="card-title" style="margin-bottom:2px">Deep Dive: ' + co.name + '</div><div style="font-size:11px;color:var(--muted)">' + co.hq + ' · ' + co.rev + ' · Fit ' + co.huksaFit + '/5</div></div>' +
+      '<div style="display:flex;gap:6px">' +
+      '<button class="btn sm" onclick="navigator.clipboard.writeText(document.getElementById(\'report-text\').innerText)">Copy</button>' +
+      '<button class="btn sm ghost" onclick="showDeepDiveSelector()">← Back</button></div>' +
+      '</div>' +
+      '<div id="report-text" style="font-size:13px;line-height:1.9;color:var(--muted);white-space:pre-wrap">' + text + '</div>' +
+      '</div>';
+  }).catch(function(err) {
+    if (out) out.innerHTML = '<div style="color:var(--red);padding:20px">Error: ' + err.message + '</div>';
+  });
+}
+
+// ── HUKSA PROFILE ─────────────────────────────────────────────
+function renderHuksa() {
+  var el = document.getElementById('huksa-content');
+  if (!el || el._built) return;
+  el._built = true;
+  el.innerHTML =
+    '<div class="profile-header">' +
+    '<div class="profile-avatar" style="background:linear-gradient(135deg,var(--accent),var(--purple))">H</div>' +
+    '<div>' +
+    '<div class="profile-name">HUKSA</div>' +
+    '<div class="profile-meta">' +
+    '<span class="badge blue">Expert-Led L&D</span>' +
+    '<span class="badge green">Est. 2016</span>' +
+    '<span class="badge" style="background:rgba(255,255,255,.04);color:var(--muted)">Gurugram, Haryana</span>' +
+    '<a href="https://huksa.com" target="_blank" class="badge blue">🌐 huksa.com</a>' +
+    '</div></div></div>' +
+    '<div class="stat-grid" style="margin:16px 0">' +
+    [{v:'80,000+',l:'Vetted Experts',c:'var(--accent)'},{v:'50+',l:'Sectors Covered',c:'var(--green)'},{v:'₹99/emp',l:'Starting Price',c:'var(--gold)'},{v:'2016',l:'Founded',c:'var(--purple)'}].map(function(s) {
+      return '<div class="stat-card" style="--accent-color:' + s.c + '"><div class="stat-card-val" style="color:' + s.c + '">' + s.v + '</div><div class="stat-card-lbl">' + s.l + '</div></div>';
+    }).join('') + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">' +
+    '<div class="card"><div class="card-title">About</div><div style="font-size:13px;line-height:1.8;color:var(--muted)">HUKSA is a Gurugram-based expert-led L&D platform that designs and delivers bespoke corporate training programs for enterprises. Connects companies with former CXOs, Functional Heads, and industry leaders across 50+ sectors. Registered as HUKSA LABS LLP (2016).</div></div>' +
+    '<div class="card"><div class="card-title">MTS Layer Positioning</div>' +
+    '<div class="mts-grid" style="grid-template-columns:repeat(5,1fr)">' +
+    [{k:'C',n:'Content',v:'partial'},{k:'D',n:'Delivery',v:'yes'},{k:'A',n:'Admin',v:'no'},{k:'S',n:'Sourcing',v:'yes'},{k:'T',n:'Tech',v:'partial'}].map(function(m) {
+      return '<div class="mts-cell ' + m.v + '"><div class="mts-cell-key">' + m.k + '</div><div class="mts-cell-lbl">' + m.n + '</div><div class="mts-cell-val">' + (m.v === 'yes' ? '✔ Strong' : m.v === 'partial' ? '~ Partial' : '✗ Weak') + '</div></div>';
+    }).join('') + '</div></div>' +
+    '</div>';
+}
+
+// ── AI API CALL ───────────────────────────────────────────────
+async function callAI(prompt, messages) {
+  var body = messages
+    ? { model: 'claude-haiku-4-5-20251001', max_tokens: 1500, messages: messages }
+    : { prompt: prompt };
+
+  var resp = await fetch('/api/expand', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  var data = await resp.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return ((data.content || []).filter(function(b) { return b.type === 'text'; }).map(function(b) { return b.text; }).join('')) || '';
+}
+
+// ── EXPAND DATABASE ───────────────────────────────────────────
+var EXPAND_RUNNING = false;
+
+function showExpand() {
+  var modal = document.getElementById('import-modal');
+  modal.style.display = 'flex';
+  modal.innerHTML =
+    '<div class="modal">' +
+    '<div class="modal-title">Expand Database</div>' +
+    '<div class="modal-sub">Add more B2B corporate MTS companies from AI</div>' +
+    '<div style="margin-bottom:14px">' +
+    '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Batch Size</label>' +
+    '<select id="exp-batch" class="filter-select" style="width:100%"><option value="5">5 companies</option><option value="10" selected>10 companies</option><option value="20">20 companies</option></select>' +
+    '</div>' +
+    '<div style="margin-bottom:14px">' +
+    '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Layer Focus</label>' +
+    '<div id="exp-layers" style="display:flex;flex-wrap:wrap;gap:5px">' +
+    ['content','delivery','tech','admin','sourcing'].map(function(l) {
+      return '<div class="filter-chip on" data-l="' + l + '" onclick="this.classList.toggle(\'on\')">' + l.charAt(0).toUpperCase() + l.slice(1) + '</div>';
+    }).join('') + '</div></div>' +
+    '<div id="exp-progress" style="display:none;margin-bottom:12px">' +
+    '<div class="progress-bar"><div class="progress-fill" id="exp-fill" style="width:0%"></div></div>' +
+    '<div id="exp-status" style="font-size:11px;color:var(--muted);margin-top:6px">Starting...</div>' +
+    '<div id="exp-list" style="max-height:160px;overflow-y:auto;margin-top:8px;font-size:11px;color:var(--muted)"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+    '<button class="btn" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn pri" id="exp-start-btn" onclick="startExpand()">▶ Start Expanding</button>' +
+    '</div></div>';
+}
+
+async function startExpand() {
+  if (EXPAND_RUNNING) return;
+  EXPAND_RUNNING = true;
+  var btn = document.getElementById('exp-start-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Running...'; }
+  var prog = document.getElementById('exp-progress');
+  if (prog) prog.style.display = 'block';
+
+  var batchSize = parseInt(document.getElementById('exp-batch').value) || 10;
+  var layers = [];
+  document.querySelectorAll('#exp-layers .filter-chip.on').forEach(function(el) { layers.push(el.dataset.l); });
+  if (!layers.length) layers = ['content','delivery','tech','admin','sourcing'];
+
+  var layerNames = {
+    content: 'B2B Content Design — custom eLearning, instructional design for corporate enterprises',
+    delivery: 'B2B Learning Delivery — corporate training, managed learning services, blended learning for enterprises',
+    tech: 'B2B L&D Technology — LMS/LXP platforms, AI learning tools for enterprises',
+    admin: 'B2B Learning Administration — training process outsourcing, compliance training management',
+    sourcing: 'B2B Strategic Sourcing — training vendor management, expert networks for enterprises'
+  };
+
+  var batches = 3;
+  var perBatch = Math.ceil(batchSize / batches);
+
+  for (var b = 0; b < batches && EXPAND_RUNNING; b++) {
+    var layer = layers[b % layers.length];
+    var existing = COMPANIES.map(function(c) { return c.short || c.name; }).join(',');
+    var status = document.getElementById('exp-status');
+    if (status) status.textContent = 'Fetching ' + layer + ' companies (batch ' + (b+1) + '/' + batches + ')...';
+
+    var prompt =
+      'List ' + perBatch + ' REAL India-based B2B CORPORATE MANAGED TRAINING SERVICES companies — ' + layer + ' layer only.\n' +
+      'STRICT: Only companies selling training/learning to enterprises. NOT consumer EdTech, schools, or bootcamps.\n' +
+      'Layer: ' + layerNames[layer] + '\n' +
+      'Not already in list: ' + existing.substring(0, 300) + '\n' +
+      'Return ONLY JSON array: [{id,name,short,primaryLayer,tier,hq,founded,emp,rev,revNum,ebitda,pat,huksaFit(1-5),acqRange:[lo,hi],acqNotes,parent,seg,model,mts:{c,d,a,s,t each Y/P/N},strengths:[3],limits:[2]}]. Real companies only.';
+
+    try {
+      var txt = await callAI(prompt);
+      var s = txt.indexOf('['), e = txt.lastIndexOf(']');
+      if (s >= 0 && e > s) {
+        var arr = JSON.parse(txt.substring(s, e+1));
+        var added = 0;
+        arr.forEach(function(co) {
+          if (!co || !co.name) return;
+          var nn = co.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+          var dupe = COMPANIES.some(function(ex) {
+            var en = (ex.short||ex.name).toLowerCase().replace(/[^a-z0-9]/g,'');
+            return en === nn || (nn.length > 5 && en.includes(nn.substring(0,5)));
+          });
+          if (dupe) return;
+          var cid = (co.id||co.name).toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,24)||'co'+Date.now();
+          while (COMPANIES.some(function(x) { return x.id === cid; })) cid += 'x';
+          co.id = cid;
+          // Sanitize
+          var rn = parseFloat(co.revNum)||0;
+          if (rn>10000000) rn=Math.round(rn/10000000);
+          else if (rn>100000) rn=Math.round(rn/100);
+          co.revNum = (rn>0&&rn<50000)?rn:null;
+          if (co.acqRange && co.acqRange[0]) {
+            var lo=parseFloat(co.acqRange[0])||0;
+            if(lo>10000000){lo=Math.round(lo/10000000);}
+            else if(lo>100000){lo=Math.round(lo/100);}
+            co.acqRange=[lo,Math.round(parseFloat(co.acqRange[1]||lo*2)||lo)];
+          }
+          co.parent=co.parent&&co.parent!=='null'&&co.parent!=='independent'?co.parent:null;
+          COMPANIES.push(co);
+          added++;
+          var list = document.getElementById('exp-list');
+          if (list) {
+            var row = document.createElement('div');
+            row.style.cssText='display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border)';
+            row.innerHTML='<div style="width:6px;height:6px;border-radius:50%;background:'+(LAYER_COLORS[co.primaryLayer]||'#888')+';flex-shrink:0"></div>'+
+              '<span style="flex:1">'+(co.name)+'</span>' +
+              '<span style="color:var(--accent)">'+(co.rev||'')+'</span>';
+            list.appendChild(row);
+            list.scrollTop=list.scrollHeight;
+          }
+        });
+        var fill=document.getElementById('exp-fill');
+        if(fill) fill.style.width=(((b+1)/batches)*100)+'%';
+        if (status) status.textContent='Added '+added+' companies. Total: '+COMPANIES.length;
+        updateStats();
+        scheduleSave();
+      }
+    } catch(err) {
+      if (status) status.textContent='Error: '+err.message;
+    }
+
+    await new Promise(function(r){setTimeout(r,1500);});
+  }
+
+  EXPAND_RUNNING = false;
+  renderAll();
+  if (btn) { btn.disabled=false; btn.innerHTML='▶ Start Again'; }
+  var fill=document.getElementById('exp-fill');
+  if(fill) fill.style.width='100%';
+  var status=document.getElementById('exp-status');
+  if(status) status.textContent='Done! '+COMPANIES.length+' total companies.';
+}
+
+function stopExpand() {
+  EXPAND_RUNNING = false;
+  showToast('Expansion stopped');
+}
+
+// ── IMPORT ────────────────────────────────────────────────────
+function showImport() {
+  var modal = document.getElementById('import-modal');
+  modal.style.display = 'flex';
+  modal.innerHTML =
+    '<div class="modal">' +
+    '<div class="modal-title">Import Data</div>' +
+    '<div class="modal-sub">Import your existing HUKSA Intel data. Run this in your current dashboard console first:<br><br>' +
+    '<code style="background:var(--surface3);padding:6px 10px;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:block;word-break:break-all">copy(JSON.stringify({companies:COMPANIES,tags:STATE.tags,shortlistWho:STATE.shortlistWho}))</code>' +
+    '<br>Then paste the copied JSON below:</div>' +
+    '<textarea id="import-json" style="width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;color:var(--text);font-family:var(--font-mono);font-size:11px;outline:none;resize:vertical;margin-bottom:12px" placeholder="Paste JSON here..."></textarea>' +
+    '<div id="import-status" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+    '<button class="btn" onclick="closeModal()">Skip for now</button>' +
+    '<button class="btn pri" onclick="doImport()">↑ Import Data</button>' +
+    '</div></div>';
+}
+
+function doImport() {
+  var raw = (document.getElementById('import-json') || {}).value || '';
+  var status = document.getElementById('import-status');
+  try {
+    var d = JSON.parse(raw);
+    if (!d.companies || !Array.isArray(d.companies)) throw new Error('Invalid format — missing companies array');
+    COMPANIES = d.companies;
+    STATE.tags = d.tags || {};
+    STATE.shortlistWho = d.shortlistWho || {};
+    scheduleSave();
+    renderAll();
+    closeModal();
+    showToast('✓ Imported ' + COMPANIES.length + ' companies');
+  } catch(e) {
+    if (status) status.textContent = '⚠ Error: ' + e.message;
+    if (status) status.style.color = 'var(--red)';
+  }
+}
+
+function closeModal() {
+  var modal = document.getElementById('import-modal');
+  if (modal) { modal.style.display = 'none'; modal.innerHTML = ''; }
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────
+function exportCSV() {
+  var tags = STATE.tags;
+  var who = STATE.shortlistWho;
+  var rows = [
+    ['#','Name','Short','HQ','Layer','Tier','Revenue','RevNum(Cr)','EBITDA','PAT','Fit','Score','Status','By','AcqLow','AcqHigh','Founded','Employees','Segment','Parent','Strengths','Limits']
+  ];
+  COMPANIES.forEach(function(c, i) {
+    var acq = safeAcq(c);
+    rows.push([i+1,c.name||'',c.short||'',c.hq||'',c.primaryLayer||'',c.tier||'',c.rev||'',c.revNum||'',c.ebitda||'',c.pat||'',c.huksaFit||'',c.score||'',tags[c.id]||'active',who[c.id]||'',acq?acq[0]:'',acq?acq[1]:'',(c.founded||''),(c.emp||''),(c.seg||''),(c.parent||''),(c.strengths||[]).join('; '),(c.limits||[]).join('; ')]);
+  });
+  var csv = rows.map(function(row) {
+    return row.map(function(cell) {
+      var s = String(cell === null || cell === undefined ? '' : cell);
+      if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) s = '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'HUKSA_Intel_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('✓ Exported ' + COMPANIES.length + ' companies');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+var toastTimer;
+function showToast(msg) {
+  var old = document.getElementById('toast');
+  if (old) old.remove();
+  clearTimeout(toastTimer);
+  var t = document.createElement('div');
+  t.id = 'toast'; t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  toastTimer = setTimeout(function() { if (t.parentNode) t.remove(); }, 2500);
+}
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (STATE.activePane === 'review') {
+    if (e.key === 'ArrowLeft') stackAction('rejected');
+    else if (e.key === 'ArrowRight') stackAction('shortlist');
+    else if (e.key === 'ArrowUp') { e.preventDefault(); stackAction('watchlist'); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); stackAction('skip'); }
+    else if (e.key === 'Enter') stackOpenProfile();
+  }
+});
+
+// ── BOOT ──────────────────────────────────────────────────────
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
