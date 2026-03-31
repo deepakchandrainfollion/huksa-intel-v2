@@ -546,8 +546,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <div class="nav-item" onclick="exportCSV()">
         <div class="nav-icon">↓</div> Export CSV
       </div>
-      <div class="nav-item" onclick="showImport()">
+      <div class="nav-item" onclick="document.getElementById('import-file-input').click()">
         <div class="nav-icon">↑</div> Import Data
+        <input type="file" id="import-file-input" accept=".json,.txt" style="display:none" onchange="importFromFile(this)">
       </div>
     </div>
     <div class="sb-stats">
@@ -583,7 +584,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 
       <!-- UNIVERSE PANE -->
       <div class="pane active" id="pane-universe">
-        <div class="stat-grid" id="universe-stats"></div>
+        <div id="import-banner" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;text-align:center"><div style="font-size:20px;margin-bottom:8px">↑</div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Import Your Data</div><div style="font-size:12px;color:var(--muted);margin-bottom:14px">Paste your exported JSON from the old dashboard</div><textarea id="import-paste-area" style="width:100%;min-height:80px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;color:var(--text);font-family:monospace;font-size:11px;outline:none;resize:vertical;margin-bottom:10px" placeholder="Paste JSON here..."></textarea><div style="display:flex;gap:8px;justify-content:center"><button class="btn pri" onclick="importFromPaste()">↑ Import</button><button class="btn ghost" onclick="document.getElementById('import-file-input2').click()">📂 From File<input type="file" id="import-file-input2" accept=".json,.txt" style="display:none" onchange="importFromFile(this)"></button><button class="btn ghost" onclick="document.getElementById('import-banner').style.display='none'">Skip</button></div></div><div class="stat-grid" id="universe-stats"></div>
         <div class="filter-row">
           <div class="search-wrap">
             <span class="search-icon">⌕</span>
@@ -819,7 +820,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 </div><!-- /app -->
 
 <!-- IMPORT MODAL -->
-<div id="import-modal" style="display:none"></div>
+<div id="import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center"><div style="background:#111820;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px;width:520px;max-width:90vw;max-height:80vh;overflow-y:auto"><div style="font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:6px;color:#f0f4f8">Import Data</div><div style="font-size:13px;color:#6b7a8d;margin-bottom:16px;line-height:1.6">Run this in your <strong style="color:#f0f4f8">old dashboard console</strong> first:<br><br><code style="background:#161d27;padding:8px 12px;border-radius:6px;font-size:10px;display:block;word-break:break-all;color:#4f9cf9;line-height:1.6">copy(JSON.stringify({companies:COMPANIES.map(function(c){return{id:c.id,name:c.name,short:c.short,primaryLayer:c.primaryLayer,tier:c.tier,hq:c.hq,founded:c.founded,emp:c.emp,rev:c.rev,revNum:c.revNum,ebitda:c.ebitda,pat:c.pat,huksaFit:c.huksaFit,score:c.score,acqRange:c.acqRange,acqNotes:c.acqNotes,seg:c.seg,model:c.model,mts:c.mts,strengths:c.strengths,limits:c.limits,clients:c.clients,whyAcquire:c.whyAcquire,whyNotAcquire:c.whyNotAcquire,parent:c.parent,notes:c.notes,cat:c.cat};}),tags:STATE.tags,shortlistWho:STATE.shortlistWho,total:COMPANIES.length}))</code><br>Then paste the result below:</div><textarea id="import-json" style="width:100%;min-height:120px;background:#161d27;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;color:#f0f4f8;font-size:11px;outline:none;resize:vertical;margin-bottom:10px;font-family:monospace" placeholder="Paste JSON here..."></textarea><div id="import-status" style="font-size:12px;color:#6b7a8d;margin-bottom:12px;min-height:16px"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button onclick="document.getElementById('import-modal').style.display='none'" style="padding:8px 16px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:#161d27;color:#6b7a8d;cursor:pointer;font-family:inherit;font-size:12px">Skip</button><button onclick="doImport()" style="padding:8px 16px;border-radius:7px;border:none;background:#4f9cf9;color:#fff;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600">↑ Import Data</button></div></div></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -858,7 +859,7 @@ function init() {
   showPane('universe');
   // Show import if no data
   if (!COMPANIES.length) {
-    setTimeout(showImport, 500);
+    setTimeout(function(){ var m=document.getElementById('import-modal');if(m)m.style.display='flex'; }, 500);
   }
 }
 
@@ -1998,20 +1999,8 @@ function stopExpand() {
 
 // ── IMPORT ────────────────────────────────────────────────────
 function showImport() {
-  var modal = document.getElementById('import-modal');
-  modal.style.display = 'flex';
-  modal.innerHTML =
-    '<div class="modal">' +
-    '<div class="modal-title">Import Data</div>' +
-    '<div class="modal-sub">Import your existing HUKSA Intel data. Run this in your current dashboard console first:<br><br>' +
-    '<code style="background:var(--surface3);padding:6px 10px;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:block;word-break:break-all">copy(JSON.stringify({companies:COMPANIES,tags:STATE.tags,shortlistWho:STATE.shortlistWho}))</code>' +
-    '<br>Then paste the copied JSON below:</div>' +
-    '<textarea id="import-json" style="width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;color:var(--text);font-family:var(--font-mono);font-size:11px;outline:none;resize:vertical;margin-bottom:12px" placeholder="Paste JSON here..."></textarea>' +
-    '<div id="import-status" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>' +
-    '<div style="display:flex;gap:8px;justify-content:flex-end">' +
-    '<button class="btn" onclick="closeModal()">Skip for now</button>' +
-    '<button class="btn pri" onclick="doImport()">↑ Import Data</button>' +
-    '</div></div>';
+  var m=document.getElementById('import-modal');
+  if(m){m.style.display='flex';}
 }
 
 function doImport() {
@@ -2035,7 +2024,7 @@ function doImport() {
 
 function closeModal() {
   var modal = document.getElementById('import-modal');
-  if (modal) { modal.style.cssText='display:none'; modal.innerHTML = ''; }
+  if (modal) modal.style.display='none';
 }
 
 // ── EXPORT CSV ────────────────────────────────────────────────
@@ -2088,6 +2077,46 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+
+function importFromFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var d = JSON.parse(e.target.result);
+      if (!d.companies || !Array.isArray(d.companies)) throw new Error("Invalid format");
+      COMPANIES = d.companies;
+      STATE.tags = d.tags || {};
+      STATE.shortlistWho = d.shortlistWho || {};
+      scheduleSave();
+      renderAll();
+      showToast("✓ Imported " + COMPANIES.length + " companies");
+      input.value = "";
+    } catch(err) {
+      showToast("⚠ Import error: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importFromPaste() {
+  var raw = (document.getElementById("import-paste-area") || {}).value || "";
+  if (!raw.trim()) { showToast("⚠ Nothing to import"); return; }
+  try {
+    var d = JSON.parse(raw);
+    if (!d.companies || !Array.isArray(d.companies)) throw new Error("Missing companies array");
+    COMPANIES = d.companies;
+    STATE.tags = d.tags || {};
+    STATE.shortlistWho = d.shortlistWho || {};
+    scheduleSave();
+    renderAll();
+    document.getElementById("import-banner").style.display = "none";
+    showToast("✓ Imported " + COMPANIES.length + " companies!");
+  } catch(err) {
+    showToast("⚠ Error: " + err.message);
+  }
+}
 // ── BOOT ──────────────────────────────────────────────────────
 window.addEventListener('load', init);
 </script>
