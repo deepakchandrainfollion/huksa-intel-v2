@@ -1864,7 +1864,7 @@ var EXPAND_RUNNING = false;
 
 function showExpand() {
   var modal = document.getElementById('import-modal');
-  modal.style.display = 'flex';
+  modal.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
   modal.innerHTML =
     '<div class="modal">' +
     '<div class="modal-title">Expand Database</div>' +
@@ -2035,7 +2035,7 @@ function doImport() {
 
 function closeModal() {
   var modal = document.getElementById('import-modal');
-  if (modal) { modal.style.display = 'none'; modal.innerHTML = ''; }
+  if (modal) { modal.style.cssText='display:none'; modal.innerHTML = ''; }
 }
 
 // ── EXPORT CSV ────────────────────────────────────────────────
